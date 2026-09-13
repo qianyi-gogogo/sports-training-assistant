@@ -4,64 +4,58 @@ import java.util.List;
 
 public class TrainingGoal {
 
-    private String goalType;
-    private String targetResult;
-    private List<String> focusAreas;
-    private int targetDurationWeeks;
-    private String description;
+    private List<TrainingGoalType> goalPriorities;
+    private String specificGoalDetails;
 
-public TrainingGoal() {
-}
+    public TrainingGoal(
+            List<TrainingGoalType> goalPriorities,
+            String specificGoalDetails) {
 
-public TrainingGoal(String goalType,
-                    String targetResult,
-                    List<String> focusAreas,
-                    int targetDurationWeeks,
-                    String description) {
-    this.goalType = goalType;
-    this.targetResult = targetResult;
-    this.focusAreas = focusAreas;
-    this.targetDurationWeeks = targetDurationWeeks;
-    this.description = description;
-}
-
-    public String getGoalType() {
-        return goalType;
+        setGoalPriorities(goalPriorities);
+        this.specificGoalDetails = specificGoalDetails;
     }
 
-    public void setGoalType(String goalType) {
-        this.goalType = goalType;
+    public List<TrainingGoalType> getGoalPriorities() {
+        return goalPriorities;
     }
 
-    public String getTargetResult() {
-        return targetResult;
+    public void setGoalPriorities(List<TrainingGoalType> goalPriorities) {
+
+        // The user must rank all five training goals.
+        if (goalPriorities == null
+                || goalPriorities.size() != TrainingGoalType.values().length) {
+
+            throw new IllegalArgumentException(
+                    "All training goals must be ranked"
+            );
+        }
+
+        // No goal in the priority list can be null.
+        for (TrainingGoalType goal : goalPriorities) {
+            if (goal == null) {
+                throw new IllegalArgumentException(
+                        "Goal priorities cannot contain null"
+                );
+            }
+        }
+
+        // Each training goal can appear only once.
+        if (goalPriorities.stream().distinct().count()
+                != goalPriorities.size()) {
+
+            throw new IllegalArgumentException(
+                    "Goal priorities cannot contain duplicate goals"
+            );
+        }
+
+        this.goalPriorities = List.copyOf(goalPriorities);
     }
 
-    public void setTargetResult(String targetResult) {
-        this.targetResult = targetResult;
+    public String getSpecificGoalDetails() {
+        return specificGoalDetails;
     }
 
-    public List<String> getFocusAreas() {
-        return focusAreas;
-    }
-
-    public void setFocusAreas(List<String> focusAreas) {
-        this.focusAreas = focusAreas;
-    }
-
-    public int getTargetDurationWeeks() {
-        return targetDurationWeeks;
-    }
-
-    public void setTargetDurationWeeks(int targetDurationWeeks) {
-        this.targetDurationWeeks = targetDurationWeeks;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setSpecificGoalDetails(String specificGoalDetails) {
+        this.specificGoalDetails = specificGoalDetails;
     }
 }

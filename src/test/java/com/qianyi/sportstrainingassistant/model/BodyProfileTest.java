@@ -1,6 +1,6 @@
 package com.qianyi.sportstrainingassistant.model;
 import org.junit.jupiter.api.Test;
-
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -50,6 +50,32 @@ public class BodyProfileTest {
         assertEquals(15, savedRecord.getExternalWeight());
         assertEquals(5, savedRecord.getReps());
         assertEquals(1, savedRecord.getRir());
+    }
+    // ==================== Basic Body Info ====================
+
+    @Test
+    void shouldStoreAndRetrieveBasicBodyInfo() {
+
+        BasicBodyInfo basicBodyInfo = new BasicBodyInfo();
+
+        BodyProfile bodyProfile = new BodyProfile();
+        bodyProfile.setBasicBodyInfo(basicBodyInfo);
+
+        assertSame(basicBodyInfo, bodyProfile.getBasicBodyInfo());
+    }
+
+
+// ==================== Body Measurements ====================
+
+    @Test
+    void shouldStoreAndRetrieveBodyMeasurements() {
+
+        BodyMeasurements bodyMeasurements = new BodyMeasurements();
+
+        BodyProfile bodyProfile = new BodyProfile();
+        bodyProfile.setBodyMeasurements(bodyMeasurements);
+
+        assertSame(bodyMeasurements, bodyProfile.getBodyMeasurements());
     }
 
 
