@@ -1,67 +1,97 @@
 package com.qianyi.sportstrainingassistant.model;
 
 public class BodyMeasurements {
-    private double chestCircumference;
-    private double waistCircumference;
-    private double armCircumference;
-    private double thighCircumference;
 
-    public double getChestCircumference() {
-        return chestCircumference;
+    private Double chestCircumferenceCm;
+    private Double waistCircumferenceCm;
+    private Double armCircumferenceCm;
+    private Double thighCircumferenceCm;
+
+
+    // ==================== Chest ====================
+
+    public Double getChestCircumferenceCm() {
+        return chestCircumferenceCm;
     }
 
-    public void setChestCircumference(double chestCircumference) {
-        if (chestCircumference < 40 || chestCircumference > 200) {
+    public void setChestCircumferenceCm(Double chestCircumferenceCm) {
+
+        if (chestCircumferenceCm != null
+                && (!Double.isFinite(chestCircumferenceCm)
+                || chestCircumferenceCm < 40
+                || chestCircumferenceCm > 200)) {
+
             throw new IllegalArgumentException(
                     "Chest circumference must be between 40 and 200 cm"
             );
         }
 
-        this.chestCircumference = chestCircumference;
+        this.chestCircumferenceCm = chestCircumferenceCm;
     }
 
 
-    public double getWaistCircumference() {
-        return waistCircumference;
+    // ==================== Waist ====================
+
+    public Double getWaistCircumferenceCm() {
+        return waistCircumferenceCm;
     }
 
-    public void setWaistCircumference(double waistCircumference) {
-        if (waistCircumference < 30 || waistCircumference > 200) {
+    public void setWaistCircumferenceCm(Double waistCircumferenceCm) {
+
+        if (waistCircumferenceCm != null
+                && (!Double.isFinite(waistCircumferenceCm)
+                || waistCircumferenceCm < 30
+                || waistCircumferenceCm > 200)) {
+
             throw new IllegalArgumentException(
                     "Waist circumference must be between 30 and 200 cm"
             );
         }
 
-        this.waistCircumference = waistCircumference;
+        this.waistCircumferenceCm = waistCircumferenceCm;
     }
 
 
-    public double getArmCircumference() {
-        return armCircumference;
+    // ==================== Arm ====================
+
+    public Double getArmCircumferenceCm() {
+        return armCircumferenceCm;
     }
 
-    public void setArmCircumference(double armCircumference) {
-        if (armCircumference < 10 || armCircumference > 80) {
+    public void setArmCircumferenceCm(Double armCircumferenceCm) {
+
+        if (armCircumferenceCm != null
+                && (!Double.isFinite(armCircumferenceCm)
+                || armCircumferenceCm < 10
+                || armCircumferenceCm > 80)) {
+
             throw new IllegalArgumentException(
                     "Arm circumference must be between 10 and 80 cm"
             );
         }
 
-        this.armCircumference = armCircumference;
+        this.armCircumferenceCm = armCircumferenceCm;
     }
 
 
-    public double getThighCircumference() {
-        return thighCircumference;
+    // ==================== Thigh ====================
+
+    public Double getThighCircumferenceCm() {
+        return thighCircumferenceCm;
     }
 
-    public void setThighCircumference(double thighCircumference) {
-        if (thighCircumference < 20 || thighCircumference > 120) {
+    public void setThighCircumferenceCm(Double thighCircumferenceCm) {
+
+        if (thighCircumferenceCm != null
+                && (!Double.isFinite(thighCircumferenceCm)
+                || thighCircumferenceCm < 20
+                || thighCircumferenceCm > 120)) {
+
             throw new IllegalArgumentException(
                     "Thigh circumference must be between 20 and 120 cm"
             );
         }
 
-        this.thighCircumference = thighCircumference;
+        this.thighCircumferenceCm = thighCircumferenceCm;
     }
 }

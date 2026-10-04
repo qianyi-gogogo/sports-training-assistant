@@ -1,228 +1,224 @@
 package com.qianyi.sportstrainingassistant.model;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ExerciseStrengthTest {
-    // ==================== 1-2 Reps ====================
+
+
+    // ==================== Valid Records ====================
 
     @Test
-    void oneToTwoShouldAcceptValidReps() {
+    void shouldCreateExerciseStrengthWithOneRecord() {
 
-        StrengthRecord record = new StrengthRecord();
-        record.setWeight(100.0);
-        record.setReps(2);
-        record.setRir(1);
+        StrengthRecord record =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        1
+                );
 
-        ExerciseStrength strength = new ExerciseStrength();
+        ExerciseStrength strength =
+                new ExerciseStrength(
+                        List.of(record)
+                );
 
-        assertDoesNotThrow(
-                () -> strength.setOneToTwo(record)
+        assertEquals(1, strength.getRecords().size());
+        assertSame(record, strength.getRecords().get(0));
+    }
+
+
+    @Test
+    void shouldCreateExerciseStrengthWithMultipleRecords() {
+
+        StrengthRecord record1 =
+                new StrengthRecord(
+                        80.0,
+                        3,
+                        1
+                );
+
+        StrengthRecord record2 =
+                new StrengthRecord(
+                        72.5,
+                        6,
+                        2
+                );
+
+        StrengthRecord record3 =
+                new StrengthRecord(
+                        60.0,
+                        12,
+                        4
+                );
+
+        ExerciseStrength strength =
+                new ExerciseStrength(
+                        List.of(
+                                record1,
+                                record2,
+                                record3
+                        )
+                );
+
+        assertEquals(3, strength.getRecords().size());
+    }
+
+
+    // ==================== No Fixed Rep Ranges ====================
+
+    @Test
+    void shouldAcceptAnyPositiveRepCount() {
+
+        StrengthRecord record =
+                new StrengthRecord(
+                        50.0,
+                        7,
+                        2
+                );
+
+        ExerciseStrength strength =
+                new ExerciseStrength(
+                        List.of(record)
+                );
+
+        assertEquals(7, strength.getRecords().get(0).getReps());
+    }
+
+
+    @Test
+    void shouldAcceptRecordWithHighRir() {
+
+        StrengthRecord record =
+                new StrengthRecord(
+                        50.0,
+                        10,
+                        5
+                );
+
+        ExerciseStrength strength =
+                new ExerciseStrength(
+                        List.of(record)
+                );
+
+        assertEquals(5, strength.getRecords().get(0).getRir());
+    }
+
+
+    @Test
+    void shouldAcceptRecordWithoutRir() {
+
+        StrengthRecord record =
+                new StrengthRecord(
+                        50.0,
+                        10,
+                        null
+                );
+
+        ExerciseStrength strength =
+                new ExerciseStrength(
+                        List.of(record)
+                );
+
+        assertNull(
+                strength.getRecords().get(0).getRir()
         );
-}
+    }
+
+
+    // ==================== Records Validation ====================
+
     @Test
-    void oneToTwoShouldRejectInvalidReps() {
-
-        StrengthRecord record = new StrengthRecord();
-        record.setWeight(100.0);
-        record.setReps(3);
-        record.setRir(1);
-
-        ExerciseStrength strength = new ExerciseStrength();
+    void shouldRejectNullRecordsList() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> strength.setOneToTwo(record)
-        );
-    }
-    // ==================== 4-6 Reps ====================
-
-    @Test
-    void fourToSixShouldAcceptValidReps() {
-
-        StrengthRecord record = record(80.0, 5, 1);
-        ExerciseStrength strength = new ExerciseStrength();
-
-        assertDoesNotThrow(
-                () -> strength.setFourToSix(record)
+                () -> new ExerciseStrength(null)
         );
     }
 
-    @Test
-    void fourToSixShouldRejectInvalidReps() {
 
-        StrengthRecord record = record(80.0, 7, 1);
-        ExerciseStrength strength = new ExerciseStrength();
+    @Test
+    void shouldRejectEmptyRecordsList() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> strength.setFourToSix(record)
+                () -> new ExerciseStrength(List.of())
         );
     }
 
 
-    // ==================== 10-12 Reps ====================
-
     @Test
-    void tenToTwelveShouldAcceptValidReps() {
+    void shouldRejectNullRecord() {
 
-        StrengthRecord record = record(60.0, 11, 1);
-        ExerciseStrength strength = new ExerciseStrength();
+        List<StrengthRecord> records =
+                new ArrayList<>();
 
-        assertDoesNotThrow(
-                () -> strength.setTenToTwelve(record)
+        records.add(
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        1
+                )
         );
-    }
 
-    @Test
-    void tenToTwelveShouldRejectInvalidReps() {
-
-        StrengthRecord record = record(60.0, 9, 1);
-        ExerciseStrength strength = new ExerciseStrength();
+        records.add(null);
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> strength.setTenToTwelve(record)
+                () -> new ExerciseStrength(records)
         );
     }
 
-    // ==================== Correct Weight Order ====================
+
+    // ==================== Defensive Copy ====================
 
     @Test
-    void shouldAcceptCorrectWeightOrder() {
+    void shouldProtectRecordsFromExternalModification() {
 
-        StrengthRecord oneToTwo = record(100.0, 2, 1);
-        StrengthRecord fourToSix = record(80.0, 5, 1);
-        StrengthRecord tenToTwelve = record(60.0, 10, 1);
+        StrengthRecord record =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        1
+                );
 
-        ExerciseStrength strength = new ExerciseStrength();
+        List<StrengthRecord> originalRecords =
+                new ArrayList<>();
 
-        assertDoesNotThrow(() -> {
-            strength.setOneToTwo(oneToTwo);
-            strength.setFourToSix(fourToSix);
-            strength.setTenToTwelve(tenToTwelve);
-        });
+        originalRecords.add(record);
+
+        ExerciseStrength strength =
+                new ExerciseStrength(originalRecords);
+
+        originalRecords.clear();
+
+        assertEquals(1, strength.getRecords().size());
     }
 
 
-    // ==================== Wrong 1-2 / 4-6 Order ====================
-
     @Test
-    void shouldRejectOneToTwoLighterThanFourToSix() {
+    void returnedRecordsShouldNotBeModifiable() {
 
-        StrengthRecord oneToTwo = record(70.0, 2, 1);
-        StrengthRecord fourToSix = record(80.0, 5, 1);
+        StrengthRecord record =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        1
+                );
 
-        ExerciseStrength strength = new ExerciseStrength();
-
-        strength.setOneToTwo(oneToTwo);
+        ExerciseStrength strength =
+                new ExerciseStrength(
+                        List.of(record)
+                );
 
         assertThrows(
-                IllegalArgumentException.class,
-                () -> strength.setFourToSix(fourToSix)
+                UnsupportedOperationException.class,
+                () -> strength.getRecords().clear()
         );
-    }
-
-
-    // ==================== Wrong 4-6 / 10-12 Order ====================
-
-    @Test
-    void shouldRejectFourToSixLighterThanTenToTwelve() {
-
-        StrengthRecord fourToSix = record(60.0, 5, 1);
-        StrengthRecord tenToTwelve = record(70.0, 10, 1);
-
-        ExerciseStrength strength = new ExerciseStrength();
-
-        strength.setFourToSix(fourToSix);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> strength.setTenToTwelve(tenToTwelve)
-        );
-    }
-
-
-    // ==================== Equal Weight ====================
-
-    @Test
-    void shouldAcceptEqualWeights() {
-
-        StrengthRecord oneToTwo = record(80.0, 2, 1);
-        StrengthRecord fourToSix = record(80.0, 5, 1);
-        StrengthRecord tenToTwelve = record(80.0, 10, 1);
-
-        ExerciseStrength strength = new ExerciseStrength();
-
-        assertDoesNotThrow(() -> {
-            strength.setOneToTwo(oneToTwo);
-            strength.setFourToSix(fourToSix);
-            strength.setTenToTwelve(tenToTwelve);
-        });
-    }
-// ==================== Retest Recommendation ====================
-
-    /*
-     * Equal weights across adjacent rep ranges are allowed,
-     * but they may indicate that the strength data is not precise enough.
-     *
-     * Equal adjacent weights:
-     * -> valid data
-     * -> recommend retest
-     *
-     * Clearly different weights:
-     * -> valid data
-     * -> no retest recommendation
-     */
-    @Test
-    void equalWeightsShouldRecommendRetest() {
-        // Equal weights in adjacent rep ranges should trigger a retest recommendation
-
-        StrengthRecord oneToTwo = record(80.0, 2, 1);
-        StrengthRecord fourToSix = record(80.0, 5, 1);
-        StrengthRecord tenToTwelve = record(70.0, 10, 1);
-
-        ExerciseStrength strength = new ExerciseStrength();
-
-        strength.setOneToTwo(oneToTwo);
-        strength.setFourToSix(fourToSix);
-        strength.setTenToTwelve(tenToTwelve);
-
-        assertTrue(strength.needsRetest());
-    }
-
-    @Test
-    void differentWeightsShouldNotRecommendRetest() {
-        // Clearly different weights should not trigger a retest recommendation
-
-        StrengthRecord oneToTwo = record(100.0, 2, 1);
-        StrengthRecord fourToSix = record(80.0, 5, 1);
-        StrengthRecord tenToTwelve = record(60.0, 10, 1);
-
-        ExerciseStrength strength = new ExerciseStrength();
-
-        strength.setOneToTwo(oneToTwo);
-        strength.setFourToSix(fourToSix);
-        strength.setTenToTwelve(tenToTwelve);
-
-        assertFalse(strength.needsRetest());
-    }
-
-    // ==================== Helper ====================
-    private StrengthRecord record(
-            double weight,
-            int reps,
-            int rir) {
-
-        StrengthRecord record = new StrengthRecord();
-
-        record.setWeight(weight);
-        record.setReps(reps);
-        record.setRir(rir);
-
-        return record;
     }
 }

@@ -2,169 +2,242 @@ package com.qianyi.sportstrainingassistant.model;
 
 import org.junit.jupiter.api.Test;
 
-import java.time.DayOfWeek;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TrainingDayPlanTest {
 
-    @Test
-    void shouldCreateTrainingDayWithExercises() {
 
-        PlannedSet benchSet = new PlannedSet(
-                SetType.WORKING,
-                70.0,
-                4,
-                6
-        );
+    private ExercisePlan createExercisePlan() {
 
-        ExercisePlan benchPress = new ExercisePlan(
+        PlannedSet plannedSet =
+                new PlannedSet(
+                        SetType.WORKING,
+                        70.0,
+                        6,
+                        10
+                );
+
+        return new ExercisePlan(
                 "Bench Press",
-                List.of(benchSet)
-        );
-
-        TrainingDayPlan dayPlan = new TrainingDayPlan(
-                DayOfWeek.MONDAY,
-                "Chest + Triceps",
-                false,
-                List.of(benchPress)
-        );
-
-        assertEquals(
-                DayOfWeek.MONDAY,
-                dayPlan.getDayOfWeek()
-        );
-
-        assertEquals(
-                "Chest + Triceps",
-                dayPlan.getWorkoutName()
-        );
-
-        assertFalse(dayPlan.isRestDay());
-
-        assertEquals(
-                List.of(benchPress),
-                dayPlan.getExercises()
+                List.of(plannedSet)
         );
     }
 
+
+    // ==================== Training Day ====================
+
+    @Test
+    void shouldCreateTrainingDay() {
+
+        ExercisePlan exercise =
+                createExercisePlan();
+
+        TrainingDayPlan day =
+                new TrainingDayPlan(
+                        "Chest Day",
+                        DayType.TRAINING,
+                        List.of(exercise)
+                );
+
+        assertEquals(
+                "Chest Day",
+                day.getWorkoutName()
+        );
+
+        assertEquals(
+                DayType.TRAINING,
+                day.getDayType()
+        );
+
+        assertEquals(
+                1,
+                day.getExercises().size()
+        );
+
+        assertSame(
+                exercise,
+                day.getExercises().get(0)
+        );
+    }
+
+
+    @Test
+    void trainingDayShouldRejectEmptyExercises() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new TrainingDayPlan(
+                        "Chest Day",
+                        DayType.TRAINING,
+                        List.of()
+                )
+        );
+    }
+
+
+    // ==================== Rest Day ====================
 
     @Test
     void shouldCreateRestDay() {
 
-        TrainingDayPlan dayPlan = new TrainingDayPlan(
-                DayOfWeek.WEDNESDAY,
-                null,
-                true,
-                List.of()
-        );
+        TrainingDayPlan day =
+                new TrainingDayPlan(
+                        "Rest Day",
+                        DayType.REST,
+                        List.of()
+                );
 
         assertEquals(
-                DayOfWeek.WEDNESDAY,
-                dayPlan.getDayOfWeek()
+                DayType.REST,
+                day.getDayType()
         );
-
-        assertNull(dayPlan.getWorkoutName());
-
-        assertTrue(dayPlan.isRestDay());
 
         assertTrue(
-                dayPlan.getExercises().isEmpty()
+                day.getExercises().isEmpty()
         );
     }
-    // ==================== Validation ====================
+
 
     @Test
-    void shouldRejectNullDayOfWeek() {
+    void restDayShouldRejectExercises() {
 
-        ExercisePlan exercise = new ExercisePlan(
-                "Bench Press",
-                List.of(
-                        new PlannedSet(
-                                SetType.WORKING,
-                                70.0,
-                                4,
-                                6
-                        )
-                )
-        );
+        ExercisePlan exercise =
+                createExercisePlan();
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new TrainingDayPlan(
+                        "Rest Day",
+                        DayType.REST,
+                        List.of(exercise)
+                )
+        );
+    }
+
+
+    // ==================== Active Recovery ====================
+
+    @Test
+    void activeRecoveryShouldAllowEmptyExercises() {
+
+        TrainingDayPlan day =
+                new TrainingDayPlan(
+                        "Recovery",
+                        DayType.ACTIVE_RECOVERY,
+                        List.of()
+                );
+
+        assertEquals(
+                DayType.ACTIVE_RECOVERY,
+                day.getDayType()
+        );
+
+        assertTrue(
+                day.getExercises().isEmpty()
+        );
+    }
+
+
+    @Test
+    void activeRecoveryShouldAllowExercises() {
+
+        ExercisePlan exercise =
+                createExercisePlan();
+
+        TrainingDayPlan day =
+                new TrainingDayPlan(
+                        "Light Recovery",
+                        DayType.ACTIVE_RECOVERY,
+                        List.of(exercise)
+                );
+
+        assertEquals(
+                1,
+                day.getExercises().size()
+        );
+    }
+
+
+    // ==================== Workout Name ====================
+
+    @Test
+    void workoutNameShouldBeOptional() {
+
+        TrainingDayPlan day =
+                new TrainingDayPlan(
                         null,
-                        "Chest",
-                        false,
-                        List.of(exercise)
-                )
+                        DayType.REST,
+                        List.of()
+                );
+
+        assertNull(
+                day.getWorkoutName()
         );
     }
 
 
     @Test
-    void shouldRejectNullWorkoutNameForTrainingDay() {
+    void blankWorkoutNameShouldBecomeNull() {
 
-        ExercisePlan exercise = new ExercisePlan(
-                "Bench Press",
-                List.of(
-                        new PlannedSet(
-                                SetType.WORKING,
-                                70.0,
-                                4,
-                                6
-                        )
-                )
+        TrainingDayPlan day =
+                new TrainingDayPlan(
+                        "     ",
+                        DayType.REST,
+                        List.of()
+                );
+
+        assertNull(
+                day.getWorkoutName()
         );
+    }
+
+
+    @Test
+    void workoutNameShouldBeTrimmed() {
+
+        TrainingDayPlan day =
+                new TrainingDayPlan(
+                        "   Chest Day   ",
+                        DayType.TRAINING,
+                        List.of(createExercisePlan())
+                );
+
+        assertEquals(
+                "Chest Day",
+                day.getWorkoutName()
+        );
+    }
+
+
+    // ==================== Day Type ====================
+
+    @Test
+    void shouldRejectNullDayType() {
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new TrainingDayPlan(
-                        DayOfWeek.MONDAY,
+                        "Chest Day",
                         null,
-                        false,
-                        List.of(exercise)
+                        List.of(createExercisePlan())
                 )
         );
     }
 
 
-    @Test
-    void shouldRejectBlankWorkoutNameForTrainingDay() {
+    // ==================== Exercises ====================
 
-        ExercisePlan exercise = new ExercisePlan(
-                "Bench Press",
-                List.of(
-                        new PlannedSet(
-                                SetType.WORKING,
-                                70.0,
-                                4,
-                                6
-                        )
-                )
-        );
+    @Test
+    void shouldRejectNullExercises() {
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new TrainingDayPlan(
-                        DayOfWeek.MONDAY,
-                        "   ",
-                        false,
-                        List.of(exercise)
-                )
-        );
-    }
-
-
-    @Test
-    void shouldRejectNullExercisesForTrainingDay() {
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new TrainingDayPlan(
-                        DayOfWeek.MONDAY,
-                        "Chest",
-                        false,
+                        "Chest Day",
+                        DayType.TRAINING,
                         null
                 )
         );
@@ -172,116 +245,66 @@ public class TrainingDayPlanTest {
 
 
     @Test
-    void shouldRejectEmptyExercisesForTrainingDay() {
+    void shouldRejectNullExerciseInsideList() {
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new TrainingDayPlan(
-                        DayOfWeek.MONDAY,
-                        "Chest",
-                        false,
-                        List.of()
-                )
-        );
-    }
+        List<ExercisePlan> exercises =
+                new ArrayList<>();
 
-
-    @Test
-    void shouldRejectExercisesOnRestDay() {
-
-        ExercisePlan exercise = new ExercisePlan(
-                "Bench Press",
-                List.of(
-                        new PlannedSet(
-                                SetType.WORKING,
-                                70.0,
-                                4,
-                                6
-                        )
-                )
-        );
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new TrainingDayPlan(
-                        DayOfWeek.WEDNESDAY,
-                        null,
-                        true,
-                        List.of(exercise)
-                )
-        );
-    }
-
-
-    @Test
-    void shouldRejectNullInsideExercises() {
-
-        List<ExercisePlan> exercises = new java.util.ArrayList<>();
-
-        exercises.add(
-                new ExercisePlan(
-                        "Bench Press",
-                        List.of(
-                                new PlannedSet(
-                                        SetType.WORKING,
-                                        70.0,
-                                        4,
-                                        6
-                                )
-                        )
-                )
-        );
-
+        exercises.add(createExercisePlan());
         exercises.add(null);
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new TrainingDayPlan(
-                        DayOfWeek.MONDAY,
-                        "Chest",
-                        false,
+                        "Chest Day",
+                        DayType.TRAINING,
                         exercises
                 )
         );
     }
 
 
+    // ==================== Defensive Copy ====================
+
     @Test
     void shouldProtectExercisesFromExternalModification() {
 
-        List<ExercisePlan> exercises = new java.util.ArrayList<>();
+        List<ExercisePlan> exercises =
+                new ArrayList<>();
 
-        ExercisePlan exercise = new ExercisePlan(
-                "Bench Press",
-                List.of(
-                        new PlannedSet(
-                                SetType.WORKING,
-                                70.0,
-                                4,
-                                6
-                        )
-                )
+        exercises.add(
+                createExercisePlan()
         );
 
-        exercises.add(exercise);
-
-        TrainingDayPlan plan = new TrainingDayPlan(
-                DayOfWeek.MONDAY,
-                "Chest",
-                false,
-                exercises
-        );
+        TrainingDayPlan day =
+                new TrainingDayPlan(
+                        "Chest Day",
+                        DayType.TRAINING,
+                        exercises
+                );
 
         exercises.clear();
 
         assertEquals(
                 1,
-                plan.getExercises().size()
+                day.getExercises().size()
         );
+    }
 
-        assertEquals(
-                exercise,
-                plan.getExercises().get(0)
+
+    @Test
+    void returnedExercisesShouldNotBeModifiable() {
+
+        TrainingDayPlan day =
+                new TrainingDayPlan(
+                        "Chest Day",
+                        DayType.TRAINING,
+                        List.of(createExercisePlan())
+                );
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> day.getExercises().clear()
         );
     }
 }

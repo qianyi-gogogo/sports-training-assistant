@@ -4,272 +4,291 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CompletedSetTest {
+public class CompletedSetTest {
 
-    // =========================
-    // Normal cases
-    // =========================
+
+    // ==================== Valid Completed Set ====================
 
     @Test
-    void shouldSetAndGetValidWorkingSet() {
-        CompletedSet set = new CompletedSet();
+    void shouldCreateValidCompletedSet() {
 
-        set.setSetType(SetType.WORKING);
-        set.setWeightKg(70.0);
-        set.setReps(6);
-        set.setRir(1);
+        CompletedSet set =
+                new CompletedSet(
+                        SetType.WORKING,
+                        70.0,
+                        8,
+                        1
+                );
 
         assertEquals(SetType.WORKING, set.getSetType());
-        assertEquals(70.0, set.getWeightKg());
-        assertEquals(6, set.getReps());
+        assertEquals(70.0, set.getWeightKg(), 0.001);
+        assertEquals(8, set.getReps());
         assertEquals(1, set.getRir());
     }
 
-    @Test
-    void shouldSetAndGetValidWarmUpSet() {
-        CompletedSet set = new CompletedSet();
-
-        set.setSetType(SetType.WARM_UP);
-        set.setWeightKg(40.0);
-        set.setReps(10);
-        set.setRir(4);
-
-        assertEquals(SetType.WARM_UP, set.getSetType());
-        assertEquals(40.0, set.getWeightKg());
-        assertEquals(10, set.getReps());
-        assertEquals(4, set.getRir());
-    }
-
-    // =========================
-    // SetType validation
-    // =========================
 
     @Test
-    void shouldRejectNullSetType() {
-        CompletedSet set = new CompletedSet();
+    void shouldAllowNullRir() {
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> set.setSetType(null)
-        );
-    }
-
-    // =========================
-    // Weight validation
-    // =========================
-
-    @Test
-    void shouldAcceptMinimumWeight() {
-        CompletedSet set = new CompletedSet();
-
-        set.setWeightKg(-500.0);
-
-        assertEquals(-500.0, set.getWeightKg());
-    }
-
-    @Test
-    void shouldAcceptMaximumWeight() {
-        CompletedSet set = new CompletedSet();
-
-        set.setWeightKg(500.0);
-
-        assertEquals(500.0, set.getWeightKg());
-    }
-
-    @Test
-    void shouldAcceptZeroWeightForBodyweightExercise() {
-        CompletedSet set = new CompletedSet();
-
-        set.setWeightKg(0.0);
-
-        assertEquals(0.0, set.getWeightKg());
-    }
-
-    @Test
-    void shouldAcceptNegativeWeightForAssistedExercise() {
-        CompletedSet set = new CompletedSet();
-
-        set.setWeightKg(-20.0);
-
-        assertEquals(-20.0, set.getWeightKg());
-    }
-
-    @Test
-    void shouldRejectWeightBelowMinimum() {
-        CompletedSet set = new CompletedSet();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> set.setWeightKg(-500.1)
-        );
-    }
-
-    @Test
-    void shouldRejectWeightAboveMaximum() {
-        CompletedSet set = new CompletedSet();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> set.setWeightKg(500.1)
-        );
-    }
-
-    @Test
-    void shouldRejectNullWeight() {
-        CompletedSet set = new CompletedSet();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> set.setWeightKg(null)
-        );
-    }
-
-    // =========================
-    // Reps validation
-    // =========================
-
-    @Test
-    void shouldAcceptOneRep() {
-        CompletedSet set = new CompletedSet();
-
-        set.setReps(1);
-
-        assertEquals(1, set.getReps());
-    }
-
-    @Test
-    void shouldAcceptHighRepCount() {
-        CompletedSet set = new CompletedSet();
-
-        set.setReps(100);
-
-        assertEquals(100, set.getReps());
-    }
-
-    @Test
-    void shouldRejectZeroReps() {
-        CompletedSet set = new CompletedSet();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> set.setReps(0)
-        );
-    }
-
-    @Test
-    void shouldRejectNegativeReps() {
-        CompletedSet set = new CompletedSet();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> set.setReps(-1)
-        );
-    }
-
-    @Test
-    void shouldRejectNullReps() {
-        CompletedSet set = new CompletedSet();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> set.setReps(null)
-        );
-    }
-
-    // =========================
-    // RIR validation
-    // =========================
-
-    @Test
-    void shouldAcceptMinimumRir() {
-        CompletedSet set = new CompletedSet();
-
-        set.setRir(0);
-
-        assertEquals(0, set.getRir());
-    }
-
-    @Test
-    void shouldAcceptMaximumRir() {
-        CompletedSet set = new CompletedSet();
-
-        set.setRir(5);
-
-        assertEquals(5, set.getRir());
-    }
-
-    @Test
-    void shouldAcceptNullRir() {
-        CompletedSet set = new CompletedSet();
-
-        set.setRir(null);
+        CompletedSet set =
+                new CompletedSet(
+                        SetType.WORKING,
+                        70.0,
+                        8,
+                        null
+                );
 
         assertNull(set.getRir());
     }
 
+
+    // ==================== Set Type ====================
+
     @Test
-    void shouldRejectRirBelowMinimum() {
-        CompletedSet set = new CompletedSet();
+    void shouldRejectNullSetType() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> set.setRir(-1)
+                () -> new CompletedSet(
+                        null,
+                        70.0,
+                        8,
+                        1
+                )
         );
     }
 
+
+    // ==================== Weight ====================
+
     @Test
-    void shouldRejectRirAboveMaximum() {
-        CompletedSet set = new CompletedSet();
+    void shouldAcceptWeightBoundaryValues() {
+
+        CompletedSet minimum =
+                new CompletedSet(
+                        SetType.WORKING,
+                        -500.0,
+                        8,
+                        1
+                );
+
+        CompletedSet maximum =
+                new CompletedSet(
+                        SetType.WORKING,
+                        500.0,
+                        8,
+                        1
+                );
+
+        assertEquals(-500.0, minimum.getWeightKg(), 0.001);
+        assertEquals(500.0, maximum.getWeightKg(), 0.001);
+    }
+
+
+    @Test
+    void shouldAcceptZeroWeight() {
+
+        CompletedSet set =
+                new CompletedSet(
+                        SetType.WORKING,
+                        0.0,
+                        10,
+                        1
+                );
+
+        assertEquals(0.0, set.getWeightKg(), 0.001);
+    }
+
+
+    @Test
+    void shouldAcceptNegativeWeightForAssistance() {
+
+        CompletedSet set =
+                new CompletedSet(
+                        SetType.WORKING,
+                        -20.0,
+                        10,
+                        1
+                );
+
+        assertEquals(-20.0, set.getWeightKg(), 0.001);
+    }
+
+
+    @Test
+    void shouldRejectWeightBelowMinimum() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> set.setRir(6)
+                () -> new CompletedSet(
+                        SetType.WORKING,
+                        -500.1,
+                        8,
+                        1
+                )
         );
     }
 
-    // =========================
-    // Validate first, mutate second
-    // =========================
 
     @Test
-    void shouldKeepPreviousWeightWhenInvalidWeightIsProvided() {
-        CompletedSet set = new CompletedSet();
-
-        set.setWeightKg(70.0);
+    void shouldRejectWeightAboveMaximum() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> set.setWeightKg(600.0)
+                () -> new CompletedSet(
+                        SetType.WORKING,
+                        500.1,
+                        8,
+                        1
+                )
         );
-
-        assertEquals(70.0, set.getWeightKg());
     }
 
-    @Test
-    void shouldKeepPreviousRepsWhenInvalidRepsAreProvided() {
-        CompletedSet set = new CompletedSet();
 
-        set.setReps(8);
+    @Test
+    void shouldRejectNaNWeight() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> set.setReps(0)
+                () -> new CompletedSet(
+                        SetType.WORKING,
+                        Double.NaN,
+                        8,
+                        1
+                )
         );
-
-        assertEquals(8, set.getReps());
     }
 
-    @Test
-    void shouldKeepPreviousRirWhenInvalidRirIsProvided() {
-        CompletedSet set = new CompletedSet();
 
-        set.setRir(2);
+    @Test
+    void shouldRejectInfiniteWeight() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> set.setRir(6)
+                () -> new CompletedSet(
+                        SetType.WORKING,
+                        Double.POSITIVE_INFINITY,
+                        8,
+                        1
+                )
         );
+    }
 
-        assertEquals(2, set.getRir());
+
+    // ==================== Reps ====================
+
+    @Test
+    void shouldAcceptPositiveReps() {
+
+        CompletedSet set =
+                new CompletedSet(
+                        SetType.WORKING,
+                        70.0,
+                        1,
+                        1
+                );
+
+        assertEquals(1, set.getReps());
+    }
+
+
+    @Test
+    void shouldAcceptHighRepCount() {
+
+        CompletedSet set =
+                new CompletedSet(
+                        SetType.WORKING,
+                        20.0,
+                        150,
+                        3
+                );
+
+        assertEquals(150, set.getReps());
+    }
+
+
+    @Test
+    void shouldRejectZeroReps() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CompletedSet(
+                        SetType.WORKING,
+                        70.0,
+                        0,
+                        1
+                )
+        );
+    }
+
+
+    @Test
+    void shouldRejectNegativeReps() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CompletedSet(
+                        SetType.WORKING,
+                        70.0,
+                        -1,
+                        1
+                )
+        );
+    }
+
+
+    // ==================== RIR ====================
+
+    @Test
+    void shouldAcceptRirBoundaryValues() {
+
+        CompletedSet zeroRir =
+                new CompletedSet(
+                        SetType.WORKING,
+                        70.0,
+                        8,
+                        0
+                );
+
+        CompletedSet fiveRir =
+                new CompletedSet(
+                        SetType.WORKING,
+                        70.0,
+                        8,
+                        5
+                );
+
+        assertEquals(0, zeroRir.getRir());
+        assertEquals(5, fiveRir.getRir());
+    }
+
+
+    @Test
+    void shouldRejectNegativeRir() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CompletedSet(
+                        SetType.WORKING,
+                        70.0,
+                        8,
+                        -1
+                )
+        );
+    }
+
+
+    @Test
+    void shouldRejectRirAboveFive() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CompletedSet(
+                        SetType.WORKING,
+                        70.0,
+                        8,
+                        6
+                )
+        );
     }
 }

@@ -2,87 +2,81 @@ package com.qianyi.sportstrainingassistant.model;
 
 import org.junit.jupiter.api.Test;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class WeeklyTrainingPlanTest {
 
-    private TrainingDayPlan createTrainingDay(
-            DayOfWeek dayOfWeek,
-            String workoutName) {
 
-        PlannedSet set = new PlannedSet(
-                SetType.WORKING,
-                70.0,
-                4,
-                6
-        );
+    private TrainingDayPlan createTrainingDay(String name) {
 
-        ExercisePlan exercise = new ExercisePlan(
-                "Bench Press",
-                List.of(set)
-        );
+        PlannedSet set =
+                new PlannedSet(
+                        SetType.WORKING,
+                        70.0,
+                        6,
+                        10
+                );
+
+        ExercisePlan exercise =
+                new ExercisePlan(
+                        "Bench Press",
+                        List.of(set)
+                );
 
         return new TrainingDayPlan(
-                dayOfWeek,
-                workoutName,
-                false,
+                name,
+                DayType.TRAINING,
                 List.of(exercise)
         );
     }
 
-    private TrainingDayPlan createRestDay(
-            DayOfWeek dayOfWeek) {
+
+    private TrainingDayPlan createRestDay() {
 
         return new TrainingDayPlan(
-                dayOfWeek,
-                null,
-                true,
+                "Rest Day",
+                DayType.REST,
                 List.of()
         );
     }
 
 
+    private List<TrainingDayPlan> createSevenDays() {
+
+        return List.of(
+                createTrainingDay("Chest"),
+                createTrainingDay("Back"),
+                createRestDay(),
+                createTrainingDay("Shoulders"),
+                createTrainingDay("Legs"),
+                createTrainingDay("Arms"),
+                createRestDay()
+        );
+    }
+
+
+    // ==================== Valid Weekly Plan ====================
+
     @Test
-    void shouldCreateWeeklyTrainingPlan() {
+    void shouldCreateValidWeeklyTrainingPlan() {
 
-        List<TrainingDayPlan> days = List.of(
-                createTrainingDay(
-                        DayOfWeek.MONDAY,
-                        "Chest"
-                ),
-                createTrainingDay(
-                        DayOfWeek.TUESDAY,
-                        "Back"
-                ),
-                createRestDay(
-                        DayOfWeek.WEDNESDAY
-                ),
-                createTrainingDay(
-                        DayOfWeek.THURSDAY,
-                        "Shoulders"
-                ),
-                createTrainingDay(
-                        DayOfWeek.FRIDAY,
-                        "Legs"
-                ),
-                createTrainingDay(
-                        DayOfWeek.SATURDAY,
-                        "Arms"
-                ),
-                createRestDay(
-                        DayOfWeek.SUNDAY
-                )
-        );
+        LocalDate startDate =
+                LocalDate.of(
+                        2026,
+                        10,
+                        5
+                );
 
-        WeeklyTrainingPlan plan = new WeeklyTrainingPlan(
-                1,
-                LocalDate.of(2026, 9, 14),
-                days
-        );
+        WeeklyTrainingPlan plan =
+                new WeeklyTrainingPlan(
+                        1,
+                        startDate,
+                        createSevenDays()
+                );
 
         assertEquals(
                 1,
@@ -90,119 +84,98 @@ public class WeeklyTrainingPlanTest {
         );
 
         assertEquals(
-                LocalDate.of(2026, 9, 14),
-                plan.getWeekStartDate()
+                startDate,
+                plan.getStartDate()
         );
 
         assertEquals(
-                days,
-                plan.getDays()
+                7,
+                plan.getDays().size()
         );
     }
 
 
+    // ==================== Week Number ====================
+
     @Test
-    void shouldPreserveTrainingDayOrder() {
+    void shouldAcceptWeekNumberOne() {
 
-        TrainingDayPlan monday = createTrainingDay(
-                DayOfWeek.MONDAY,
-                "Chest"
-        );
+        WeeklyTrainingPlan plan =
+                new WeeklyTrainingPlan(
+                        1,
+                        LocalDate.of(2026, 10, 5),
+                        createSevenDays()
+                );
 
-        TrainingDayPlan tuesday = createTrainingDay(
-                DayOfWeek.TUESDAY,
-                "Back"
-        );
-
-        TrainingDayPlan wednesday = createRestDay(
-                DayOfWeek.WEDNESDAY
-        );
-
-        List<TrainingDayPlan> days = List.of(
-                monday,
-                tuesday,
-                wednesday,
-                createTrainingDay(
-                        DayOfWeek.THURSDAY,
-                        "Shoulders"
-                ),
-                createTrainingDay(
-                        DayOfWeek.FRIDAY,
-                        "Legs"
-                ),
-                createTrainingDay(
-                        DayOfWeek.SATURDAY,
-                        "Arms"
-                ),
-                createRestDay(
-                        DayOfWeek.SUNDAY
-                )
-        );
-
-        WeeklyTrainingPlan plan = new WeeklyTrainingPlan(
+        assertEquals(
                 1,
-                LocalDate.of(2026, 9, 14),
-                days
-        );
-
-        assertEquals(
-                monday,
-                plan.getDays().get(0)
-        );
-
-        assertEquals(
-                tuesday,
-                plan.getDays().get(1)
-        );
-
-        assertEquals(
-                wednesday,
-                plan.getDays().get(2)
-        );
-    }
-    // ==================== Validation ====================
-
-    @Test
-    void shouldRejectNullWeekNumber() {
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WeeklyTrainingPlan(
-                        null,
-                        LocalDate.of(2026, 9, 14),
-                        createValidWeek()
-                )
+                plan.getWeekNumber()
         );
     }
 
 
     @Test
-    void shouldRejectWeekNumberBelowOne() {
+    void shouldAcceptHigherWeekNumber() {
+
+        WeeklyTrainingPlan plan =
+                new WeeklyTrainingPlan(
+                        52,
+                        LocalDate.of(2027, 9, 27),
+                        createSevenDays()
+                );
+
+        assertEquals(
+                52,
+                plan.getWeekNumber()
+        );
+    }
+
+
+    @Test
+    void shouldRejectZeroWeekNumber() {
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new WeeklyTrainingPlan(
                         0,
-                        LocalDate.of(2026, 9, 14),
-                        createValidWeek()
+                        LocalDate.of(2026, 10, 5),
+                        createSevenDays()
                 )
         );
     }
 
 
     @Test
-    void shouldRejectNullWeekStartDate() {
+    void shouldRejectNegativeWeekNumber() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new WeeklyTrainingPlan(
+                        -1,
+                        LocalDate.of(2026, 10, 5),
+                        createSevenDays()
+                )
+        );
+    }
+
+
+    // ==================== Start Date ====================
+
+    @Test
+    void shouldRejectNullStartDate() {
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new WeeklyTrainingPlan(
                         1,
                         null,
-                        createValidWeek()
+                        createSevenDays()
                 )
         );
     }
 
+
+    // ==================== Days ====================
 
     @Test
     void shouldRejectNullDays() {
@@ -211,7 +184,7 @@ public class WeeklyTrainingPlanTest {
                 IllegalArgumentException.class,
                 () -> new WeeklyTrainingPlan(
                         1,
-                        LocalDate.of(2026, 9, 14),
+                        LocalDate.of(2026, 10, 5),
                         null
                 )
         );
@@ -219,18 +192,23 @@ public class WeeklyTrainingPlanTest {
 
 
     @Test
-    void shouldRejectIncompleteWeek() {
+    void shouldRejectLessThanSevenDays() {
 
-        List<TrainingDayPlan> days = List.of(
-                createTrainingDay(DayOfWeek.MONDAY, "Chest"),
-                createTrainingDay(DayOfWeek.TUESDAY, "Back")
-        );
+        List<TrainingDayPlan> days =
+                List.of(
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay()
+                );
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new WeeklyTrainingPlan(
                         1,
-                        LocalDate.of(2026, 9, 14),
+                        LocalDate.of(2026, 10, 5),
                         days
                 )
         );
@@ -238,23 +216,25 @@ public class WeeklyTrainingPlanTest {
 
 
     @Test
-    void shouldRejectDuplicateDayOfWeek() {
+    void shouldRejectMoreThanSevenDays() {
 
-        List<TrainingDayPlan> days = List.of(
-                createTrainingDay(DayOfWeek.MONDAY, "Chest"),
-                createTrainingDay(DayOfWeek.MONDAY, "Back"),
-                createRestDay(DayOfWeek.WEDNESDAY),
-                createTrainingDay(DayOfWeek.THURSDAY, "Shoulders"),
-                createTrainingDay(DayOfWeek.FRIDAY, "Legs"),
-                createTrainingDay(DayOfWeek.SATURDAY, "Arms"),
-                createRestDay(DayOfWeek.SUNDAY)
-        );
+        List<TrainingDayPlan> days =
+                List.of(
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay()
+                );
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new WeeklyTrainingPlan(
                         1,
-                        LocalDate.of(2026, 9, 14),
+                        LocalDate.of(2026, 10, 5),
                         days
                 )
         );
@@ -262,37 +242,132 @@ public class WeeklyTrainingPlanTest {
 
 
     @Test
-    void shouldRejectNullInsideDays() {
+    void shouldRejectNullDayInsideList() {
 
-        List<TrainingDayPlan> days = new java.util.ArrayList<>(
-                createValidWeek()
-        );
+        List<TrainingDayPlan> days =
+                new ArrayList<>();
 
-        days.set(3, null);
+        days.add(createRestDay());
+        days.add(createRestDay());
+        days.add(createRestDay());
+        days.add(null);
+        days.add(createRestDay());
+        days.add(createRestDay());
+        days.add(createRestDay());
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new WeeklyTrainingPlan(
                         1,
-                        LocalDate.of(2026, 9, 14),
+                        LocalDate.of(2026, 10, 5),
                         days
                 )
         );
     }
 
+
+    // ==================== Rest Days ====================
+
+    @Test
+    void shouldAllowSevenRestDays() {
+
+        List<TrainingDayPlan> days =
+                List.of(
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay(),
+                        createRestDay()
+                );
+
+        WeeklyTrainingPlan plan =
+                new WeeklyTrainingPlan(
+                        1,
+                        LocalDate.of(2026, 10, 5),
+                        days
+                );
+
+        assertEquals(
+                7,
+                plan.getDays().size()
+        );
+
+        assertTrue(
+                plan.getDays()
+                        .stream()
+                        .allMatch(
+                                day ->
+                                        day.getDayType()
+                                                == DayType.REST
+                        )
+        );
+    }
+
+
+    // ==================== Order ====================
+
+    @Test
+    void shouldPreserveDayOrder() {
+
+        List<TrainingDayPlan> days =
+                List.of(
+                        createTrainingDay("Day 1"),
+                        createTrainingDay("Day 2"),
+                        createRestDay(),
+                        createTrainingDay("Day 4"),
+                        createTrainingDay("Day 5"),
+                        createTrainingDay("Day 6"),
+                        createRestDay()
+                );
+
+        WeeklyTrainingPlan plan =
+                new WeeklyTrainingPlan(
+                        1,
+                        LocalDate.of(2026, 10, 5),
+                        days
+                );
+
+        assertEquals(
+                "Day 1",
+                plan.getDays()
+                        .get(0)
+                        .getWorkoutName()
+        );
+
+        assertEquals(
+                "Day 2",
+                plan.getDays()
+                        .get(1)
+                        .getWorkoutName()
+        );
+
+        assertEquals(
+                "Day 4",
+                plan.getDays()
+                        .get(3)
+                        .getWorkoutName()
+        );
+    }
+
+
+    // ==================== Defensive Copy ====================
 
     @Test
     void shouldProtectDaysFromExternalModification() {
 
-        List<TrainingDayPlan> days = new java.util.ArrayList<>(
-                createValidWeek()
-        );
+        List<TrainingDayPlan> days =
+                new ArrayList<>(
+                        createSevenDays()
+                );
 
-        WeeklyTrainingPlan plan = new WeeklyTrainingPlan(
-                1,
-                LocalDate.of(2026, 9, 14),
-                days
-        );
+        WeeklyTrainingPlan plan =
+                new WeeklyTrainingPlan(
+                        1,
+                        LocalDate.of(2026, 10, 5),
+                        days
+                );
 
         days.clear();
 
@@ -300,36 +375,22 @@ public class WeeklyTrainingPlanTest {
                 7,
                 plan.getDays().size()
         );
-    }//helper
-    private List<TrainingDayPlan> createValidWeek() {
+    }
 
-        return List.of(
-                createTrainingDay(
-                        DayOfWeek.MONDAY,
-                        "Chest"
-                ),
-                createTrainingDay(
-                        DayOfWeek.TUESDAY,
-                        "Back"
-                ),
-                createRestDay(
-                        DayOfWeek.WEDNESDAY
-                ),
-                createTrainingDay(
-                        DayOfWeek.THURSDAY,
-                        "Shoulders"
-                ),
-                createTrainingDay(
-                        DayOfWeek.FRIDAY,
-                        "Legs"
-                ),
-                createTrainingDay(
-                        DayOfWeek.SATURDAY,
-                        "Arms"
-                ),
-                createRestDay(
-                        DayOfWeek.SUNDAY
-                )
+
+    @Test
+    void returnedDaysShouldNotBeModifiable() {
+
+        WeeklyTrainingPlan plan =
+                new WeeklyTrainingPlan(
+                        1,
+                        LocalDate.of(2026, 10, 5),
+                        createSevenDays()
+                );
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> plan.getDays().clear()
         );
     }
 }

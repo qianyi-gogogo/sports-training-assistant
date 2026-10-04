@@ -2,51 +2,52 @@ package com.qianyi.sportstrainingassistant.model;
 
 public class StrengthRecord {
 
-    private Double weight;
-    private Integer reps;
-    private Integer rir;
+    private final double weightKg;
+    private final int reps;
+    private final Integer rir;
 
 
-    public Double getWeight() {
-        return weight;
-    }
+    public StrengthRecord(
+            double weightKg,
+            int reps,
+            Integer rir) {
 
-    public void setWeight(Double weight) {
-        if (weight != null && (weight < 0 || weight > 1000)) {
+        if (!Double.isFinite(weightKg)
+                || weightKg < 0
+                || weightKg > 500) {
+
             throw new IllegalArgumentException(
-                    "Weight must be between 0 and 1000 kg"
+                    "Weight must be between 0 and 500 kg"
             );
         }
 
-        this.weight = weight;
-    }
-
-
-    public Integer getReps() {
-        return reps;
-    }
-
-    public void setReps(Integer reps) {
-        if (reps != null && (reps < 1 || reps > 100)) {
+        if (reps < 1) {
             throw new IllegalArgumentException(
-                    "Reps must be between 1 and 100"
+                    "Reps must be at least 1"
             );
         }
 
-        this.reps = reps;
-    }
-
-    public Integer getRir() {
-        return rir;
-    }
-
-    public void setRir(Integer rir) {
         if (rir != null && (rir < 0 || rir > 5)) {
             throw new IllegalArgumentException(
                     "RIR must be between 0 and 5"
             );
         }
 
+        this.weightKg = weightKg;
+        this.reps = reps;
         this.rir = rir;
+    }
+
+
+    public double getWeightKg() {
+        return weightKg;
+    }
+
+    public int getReps() {
+        return reps;
+    }
+
+    public Integer getRir() {
+        return rir;
     }
 }

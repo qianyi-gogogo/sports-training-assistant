@@ -1,44 +1,82 @@
 package com.qianyi.sportstrainingassistant.model;
 
 public class BasicBodyInfo {
-    private double height;
-    private double weight;
-    private double bodyFatPercentage;
+
+    private double heightCm;
+    private double weightKg;
+    private Double bodyFatPercentage;
     private int age;
-    private String biologicalSex;
+    private BiologicalSex biologicalSex;
 
-    public double getHeight() {
-        return height;
+
+    public BasicBodyInfo(
+            double heightCm,
+            double weightKg,
+            int age,
+            BiologicalSex biologicalSex) {
+
+        setHeightCm(heightCm);
+        setWeightKg(weightKg);
+        setAge(age);
+        setBiologicalSex(biologicalSex);
     }
 
-    public void setHeight(double height) {
-        if (height < 50 || height > 250) {
-            throw new IllegalArgumentException("Height must be between 50 and 250 cm");
+
+    // ==================== Height ====================
+
+    public double getHeightCm() {
+        return heightCm;
+    }
+
+    public void setHeightCm(double heightCm) {
+
+        if (!Double.isFinite(heightCm)
+                || heightCm < 50
+                || heightCm > 250) {
+
+            throw new IllegalArgumentException(
+                    "Height must be between 50 and 250 cm"
+            );
         }
 
-        this.height = height;
+        this.heightCm = heightCm;
     }
 
 
-    public double getWeight() {
-        return weight;
+    // ==================== Weight ====================
+
+    public double getWeightKg() {
+        return weightKg;
     }
 
-    public void setWeight(double weight) {
-        if (weight < 10 || weight > 300) {
-            throw new IllegalArgumentException("Weight must be between 10 and 300 kg");
+    public void setWeightKg(double weightKg) {
+
+        if (!Double.isFinite(weightKg)
+                || weightKg < 10
+                || weightKg > 300) {
+
+            throw new IllegalArgumentException(
+                    "Weight must be between 10 and 300 kg"
+            );
         }
 
-        this.weight = weight;
+        this.weightKg = weightKg;
     }
 
 
-    public double getBodyFatPercentage() {
+    // ==================== Body Fat Percentage ====================
+
+    public Double getBodyFatPercentage() {
         return bodyFatPercentage;
     }
 
-    public void setBodyFatPercentage(double bodyFatPercentage) {
-        if (bodyFatPercentage < 3 || bodyFatPercentage > 60) {
+    public void setBodyFatPercentage(Double bodyFatPercentage) {
+
+        if (bodyFatPercentage != null
+                && (!Double.isFinite(bodyFatPercentage)
+                || bodyFatPercentage < 3
+                || bodyFatPercentage > 60)) {
+
             throw new IllegalArgumentException(
                     "Body fat percentage must be between 3 and 60"
             );
@@ -48,24 +86,31 @@ public class BasicBodyInfo {
     }
 
 
+    // ==================== Age ====================
+
     public int getAge() {
         return age;
     }
 
     public void setAge(int age) {
+
         if (age < 8 || age > 100) {
-            throw new IllegalArgumentException("Age must be between 8 and 100");
+            throw new IllegalArgumentException(
+                    "Age must be between 8 and 100"
+            );
         }
 
         this.age = age;
     }
 
 
-    public String getBiologicalSex() {
+    // ==================== Biological Sex ====================
+
+    public BiologicalSex getBiologicalSex() {
         return biologicalSex;
     }
 
-    public void setBiologicalSex(String biologicalSex) {
+    public void setBiologicalSex(BiologicalSex biologicalSex) {
 
         if (biologicalSex == null) {
             throw new IllegalArgumentException(
@@ -73,14 +118,6 @@ public class BasicBodyInfo {
             );
         }
 
-        if (!biologicalSex.equalsIgnoreCase("male")
-                && !biologicalSex.equalsIgnoreCase("female")) {
-
-            throw new IllegalArgumentException(
-                    "Biological sex must be male or female"
-            );
-        }
-
-        this.biologicalSex = biologicalSex.toLowerCase();
+        this.biologicalSex = biologicalSex;
     }
 }

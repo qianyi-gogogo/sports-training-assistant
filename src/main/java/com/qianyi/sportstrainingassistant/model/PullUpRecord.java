@@ -1,55 +1,112 @@
 package com.qianyi.sportstrainingassistant.model;
 
+public class PullUpRecord {
 
-    public class PullUpRecord {
-
-        private double externalWeight;
-        private int reps;
-        private int rir;
-
-
-        public double getExternalWeight() {
-            return externalWeight;
-        }
-
-        public void setExternalWeight(double externalWeight) {
-            if (externalWeight < 0) {
-                throw new IllegalArgumentException(
-                        "External weight cannot be negative"
-                );
-            }
-
-            this.externalWeight = externalWeight;
-        }
+    private final PullUpMode mode;
+    private final double weightKg;
+    private final int reps;
+    private final int rir;
 
 
-        public int getReps() {
-            return reps;
-        }
+    public PullUpRecord(
+            PullUpMode mode,
+            double weightKg,
+            int reps,
+            int rir) {
 
-        public void setReps(int reps) {
-            if (reps <= 0) {
-                throw new IllegalArgumentException(
-                        "Reps must be greater than 0"
-                );
-            }
+        validateMode(mode);
+        validateWeight(mode, weightKg);
+        validateReps(reps);
+        validateRir(rir);
 
-            this.reps = reps;
-        }
+        this.mode = mode;
+        this.weightKg = weightKg;
+        this.reps = reps;
+        this.rir = rir;
+    }
 
 
-        public int getRir() {
-            return rir;
-        }
+    public PullUpMode getMode() {
+        return mode;
+    }
 
-        public void setRir(int rir) {
-            if (rir < 0 || rir > 5) {
-                throw new IllegalArgumentException(
-                        "RIR must be between 0 and 5"
-                );
-            }
+    public double getWeightKg() {
+        return weightKg;
+    }
 
-            this.rir = rir;
+    public int getReps() {
+        return reps;
+    }
+
+    public int getRir() {
+        return rir;
+    }
+
+
+    // ==================== Mode Validation ====================
+
+    private void validateMode(PullUpMode mode) {
+
+        if (mode == null) {
+            throw new IllegalArgumentException(
+                    "Pull-up mode cannot be null"
+            );
         }
     }
 
+
+    // ==================== Weight Validation ====================
+
+    private void validateWeight(
+            PullUpMode mode,
+            double weightKg) {
+
+        if (!Double.isFinite(weightKg)
+                || weightKg < 0
+                || weightKg > 500) {
+
+            throw new IllegalArgumentException(
+                    "Weight must be between 0 and 500 kg"
+            );
+        }
+
+        if (mode == PullUpMode.BODYWEIGHT && weightKg != 0) {
+            throw new IllegalArgumentException(
+                    "Bodyweight pull-up weight must be 0"
+            );
+        }
+
+        if ((mode == PullUpMode.WEIGHTED
+                || mode == PullUpMode.ASSISTED)
+                && weightKg <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Weighted or assisted pull-up weight must be greater than 0"
+            );
+        }
+    }
+
+
+    // ==================== Reps Validation ====================
+
+    private void validateReps(int reps) {
+
+        if (reps <= 0) {
+            throw new IllegalArgumentException(
+                    "Reps must be greater than 0"
+            );
+        }
+    }
+
+
+    // ==================== RIR Validation ====================
+
+    private void validateRir(int rir) {
+
+        if (rir < 0 || rir > 5) {
+            throw new IllegalArgumentException(
+                    "RIR must be between 0 and 5"
+            );
+        }
+    }
+}

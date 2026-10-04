@@ -1,52 +1,99 @@
 package com.qianyi.sportstrainingassistant.model;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+
 public class BasicBodyInfoTest {
-    // ==================== Height ====================
+
+
+    // ==================== Valid Creation ====================
 
     @Test
-    void shouldSetValidHeight() {
+    void shouldCreateValidBasicBodyInfo() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
-        info.setHeight(175.0);
+        assertEquals(175.0, info.getHeightCm(), 0.001);
+        assertEquals(70.0, info.getWeightKg(), 0.001);
+        assertEquals(20, info.getAge());
+        assertEquals(BiologicalSex.MALE, info.getBiologicalSex());
 
-        assertEquals(175.0, info.getHeight(), 0.001);
+        // Body fat is optional
+        assertNull(info.getBodyFatPercentage());
     }
+
+
+    // ==================== Height ====================
 
     @Test
     void shouldAcceptHeightBoundaryValues() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo minimum =
+                new BasicBodyInfo(
+                        50.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
-        info.setHeight(50.0);
-        assertEquals(50.0, info.getHeight(), 0.001);
+        BasicBodyInfo maximum =
+                new BasicBodyInfo(
+                        250.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
-        info.setHeight(250.0);
-        assertEquals(250.0, info.getHeight(), 0.001);
+        assertEquals(50.0, minimum.getHeightCm(), 0.001);
+        assertEquals(250.0, maximum.getHeightCm(), 0.001);
     }
 
     @Test
     void shouldRejectHeightBelowMinimum() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
-
         assertThrows(
                 IllegalArgumentException.class,
-                () -> info.setHeight(49.9)
+                () -> new BasicBodyInfo(
+                        49.9,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                )
         );
     }
 
     @Test
     void shouldRejectHeightAboveMaximum() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new BasicBodyInfo(
+                        250.1,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectNaNHeight() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> info.setHeight(250.1)
+                () -> new BasicBodyInfo(
+                        Double.NaN,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                )
         );
     }
 
@@ -54,46 +101,67 @@ public class BasicBodyInfoTest {
     // ==================== Weight ====================
 
     @Test
-    void shouldSetValidWeight() {
-
-        BasicBodyInfo info = new BasicBodyInfo();
-
-        info.setWeight(70.0);
-
-        assertEquals(70.0, info.getWeight(), 0.001);
-    }
-
-    @Test
     void shouldAcceptWeightBoundaryValues() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo minimum =
+                new BasicBodyInfo(
+                        175.0,
+                        10.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
-        info.setWeight(10.0);
-        assertEquals(10.0, info.getWeight(), 0.001);
+        BasicBodyInfo maximum =
+                new BasicBodyInfo(
+                        175.0,
+                        300.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
-        info.setWeight(300.0);
-        assertEquals(300.0, info.getWeight(), 0.001);
+        assertEquals(10.0, minimum.getWeightKg(), 0.001);
+        assertEquals(300.0, maximum.getWeightKg(), 0.001);
     }
 
     @Test
     void shouldRejectWeightBelowMinimum() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
-
         assertThrows(
                 IllegalArgumentException.class,
-                () -> info.setWeight(9.9)
+                () -> new BasicBodyInfo(
+                        175.0,
+                        9.9,
+                        20,
+                        BiologicalSex.MALE
+                )
         );
     }
 
     @Test
     void shouldRejectWeightAboveMaximum() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new BasicBodyInfo(
+                        175.0,
+                        300.1,
+                        20,
+                        BiologicalSex.MALE
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectNaNWeight() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> info.setWeight(300.1)
+                () -> new BasicBodyInfo(
+                        175.0,
+                        Double.NaN,
+                        20,
+                        BiologicalSex.MALE
+                )
         );
     }
 
@@ -101,19 +169,51 @@ public class BasicBodyInfoTest {
     // ==================== Body Fat Percentage ====================
 
     @Test
-    void shouldSetValidBodyFatPercentage() {
+    void shouldAcceptValidBodyFatPercentage() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
         info.setBodyFatPercentage(15.0);
 
-        assertEquals(15.0, info.getBodyFatPercentage(), 0.001);
+        assertEquals(
+                15.0,
+                info.getBodyFatPercentage(),
+                0.001
+        );
     }
 
     @Test
-    void shouldAcceptBodyFatPercentageBoundaryValues() {
+    void shouldAcceptNullBodyFatPercentage() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
+
+        info.setBodyFatPercentage(null);
+
+        assertNull(info.getBodyFatPercentage());
+    }
+
+    @Test
+    void shouldAcceptBodyFatBoundaryValues() {
+
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
         info.setBodyFatPercentage(3.0);
         assertEquals(3.0, info.getBodyFatPercentage(), 0.001);
@@ -123,9 +223,15 @@ public class BasicBodyInfoTest {
     }
 
     @Test
-    void shouldRejectBodyFatPercentageBelowMinimum() {
+    void shouldRejectBodyFatBelowMinimum() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -134,9 +240,15 @@ public class BasicBodyInfoTest {
     }
 
     @Test
-    void shouldRejectBodyFatPercentageAboveMaximum() {
+    void shouldRejectBodyFatAboveMaximum() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -144,50 +256,74 @@ public class BasicBodyInfoTest {
         );
     }
 
+    @Test
+    void shouldRejectNaNBodyFatPercentage() {
+
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> info.setBodyFatPercentage(Double.NaN)
+        );
+    }
+
 
     // ==================== Age ====================
 
     @Test
-    void shouldSetValidAge() {
-
-        BasicBodyInfo info = new BasicBodyInfo();
-
-        info.setAge(20);
-
-        assertEquals(20, info.getAge());
-    }
-
-    @Test
     void shouldAcceptAgeBoundaryValues() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo minimum =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        8,
+                        BiologicalSex.MALE
+                );
 
-        info.setAge(8);
-        assertEquals(8, info.getAge());
+        BasicBodyInfo maximum =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        100,
+                        BiologicalSex.MALE
+                );
 
-        info.setAge(100);
-        assertEquals(100, info.getAge());
+        assertEquals(8, minimum.getAge());
+        assertEquals(100, maximum.getAge());
     }
 
     @Test
     void shouldRejectAgeBelowMinimum() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
-
         assertThrows(
                 IllegalArgumentException.class,
-                () -> info.setAge(7)
+                () -> new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        7,
+                        BiologicalSex.MALE
+                )
         );
     }
 
     @Test
     void shouldRejectAgeAboveMaximum() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
-
         assertThrows(
                 IllegalArgumentException.class,
-                () -> info.setAge(101)
+                () -> new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        101,
+                        BiologicalSex.MALE
+                )
         );
     }
 
@@ -195,59 +331,69 @@ public class BasicBodyInfoTest {
     // ==================== Biological Sex ====================
 
     @Test
-    void shouldSetMaleBiologicalSex() {
+    void shouldAcceptMaleBiologicalSex() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
-        info.setBiologicalSex("male");
-
-        assertEquals("male", info.getBiologicalSex());
+        assertEquals(
+                BiologicalSex.MALE,
+                info.getBiologicalSex()
+        );
     }
 
     @Test
-    void shouldSetFemaleBiologicalSex() {
+    void shouldAcceptFemaleBiologicalSex() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.FEMALE
+                );
 
-        info.setBiologicalSex("female");
-
-        assertEquals("female", info.getBiologicalSex());
-    }
-
-    @Test
-    void shouldAcceptBiologicalSexIgnoringCase() {
-
-        BasicBodyInfo info = new BasicBodyInfo();
-
-        info.setBiologicalSex("MALE");
-
-        assertEquals("male", info.getBiologicalSex());
-
-        info.setBiologicalSex("Female");
-
-        assertEquals("female", info.getBiologicalSex());
+        assertEquals(
+                BiologicalSex.FEMALE,
+                info.getBiologicalSex()
+        );
     }
 
     @Test
     void shouldRejectNullBiologicalSex() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
-
         assertThrows(
                 IllegalArgumentException.class,
-                () -> info.setBiologicalSex(null)
+                () -> new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        null
+                )
         );
     }
+
+
+    // ==================== Updating Values ====================
 
     @Test
-    void shouldRejectInvalidBiologicalSex() {
+    void shouldAllowValidWeightUpdate() {
 
-        BasicBodyInfo info = new BasicBodyInfo();
+        BasicBodyInfo info =
+                new BasicBodyInfo(
+                        175.0,
+                        70.0,
+                        20,
+                        BiologicalSex.MALE
+                );
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> info.setBiologicalSex("other")
-        );
+        info.setWeightKg(72.5);
+
+        assertEquals(72.5, info.getWeightKg(), 0.001);
     }
-
 }

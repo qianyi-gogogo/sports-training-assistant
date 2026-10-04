@@ -6,41 +6,43 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PlannedSetTest {
 
+
+    // ==================== Valid Planned Set ====================
+
     @Test
-    void shouldCreateValidWarmUpSet() {
+    void shouldCreateValidPlannedSet() {
 
-        PlannedSet set = new PlannedSet(
-                SetType.WARM_UP,
-                40.0,
-                8,
-                10
-        );
+        PlannedSet set =
+                new PlannedSet(
+                        SetType.WORKING,
+                        70.0,
+                        6,
+                        10
+                );
 
-        assertEquals(SetType.WARM_UP, set.getSetType());
-        assertEquals(40.0, set.getWeightKg());
-        assertEquals(8, set.getMinReps());
+        assertEquals(SetType.WORKING, set.getSetType());
+        assertEquals(70.0, set.getWeightKg(), 0.001);
+        assertEquals(6, set.getMinReps());
         assertEquals(10, set.getMaxReps());
     }
 
 
     @Test
-    void shouldCreateValidWorkingSet() {
+    void shouldAcceptWarmUpSet() {
 
-        PlannedSet set = new PlannedSet(
-                SetType.WORKING,
-                70.0,
-                4,
-                5
-        );
+        PlannedSet set =
+                new PlannedSet(
+                        SetType.WARM_UP,
+                        40.0,
+                        8,
+                        12
+                );
 
-        assertEquals(SetType.WORKING, set.getSetType());
-        assertEquals(70.0, set.getWeightKg());
-        assertEquals(4, set.getMinReps());
-        assertEquals(5, set.getMaxReps());
+        assertEquals(SetType.WARM_UP, set.getSetType());
     }
 
 
-    // ==================== Validation ====================
+    // ==================== Set Type ====================
 
     @Test
     void shouldRejectNullSetType() {
@@ -50,10 +52,66 @@ public class PlannedSetTest {
                 () -> new PlannedSet(
                         null,
                         70.0,
-                        4,
-                        6
+                        6,
+                        10
                 )
         );
+    }
+
+
+    // ==================== Weight ====================
+
+    @Test
+    void shouldAcceptWeightBoundaryValues() {
+
+        PlannedSet minimum =
+                new PlannedSet(
+                        SetType.WORKING,
+                        -500.0,
+                        5,
+                        8
+                );
+
+        PlannedSet maximum =
+                new PlannedSet(
+                        SetType.WORKING,
+                        500.0,
+                        5,
+                        8
+                );
+
+        assertEquals(-500.0, minimum.getWeightKg(), 0.001);
+        assertEquals(500.0, maximum.getWeightKg(), 0.001);
+    }
+
+
+    @Test
+    void shouldAcceptZeroWeight() {
+
+        PlannedSet set =
+                new PlannedSet(
+                        SetType.WORKING,
+                        0.0,
+                        5,
+                        8
+                );
+
+        assertEquals(0.0, set.getWeightKg(), 0.001);
+    }
+
+
+    @Test
+    void shouldAcceptNegativeWeightForAssistance() {
+
+        PlannedSet set =
+                new PlannedSet(
+                        SetType.WORKING,
+                        -20.0,
+                        8,
+                        12
+                );
+
+        assertEquals(-20.0, set.getWeightKg(), 0.001);
     }
 
 
@@ -65,8 +123,8 @@ public class PlannedSetTest {
                 () -> new PlannedSet(
                         SetType.WORKING,
                         null,
-                        4,
-                        6
+                        5,
+                        8
                 )
         );
     }
@@ -80,8 +138,8 @@ public class PlannedSetTest {
                 () -> new PlannedSet(
                         SetType.WORKING,
                         -500.1,
-                        4,
-                        6
+                        5,
+                        8
                 )
         );
     }
@@ -95,43 +153,62 @@ public class PlannedSetTest {
                 () -> new PlannedSet(
                         SetType.WORKING,
                         500.1,
-                        4,
-                        6
+                        5,
+                        8
                 )
         );
     }
 
 
     @Test
-    void shouldAllowZeroWeightForBodyweightExercise() {
+    void shouldRejectNaNWeight() {
 
-        PlannedSet set = new PlannedSet(
-                SetType.WORKING,
-                0.0,
-                8,
-                12
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new PlannedSet(
+                        SetType.WORKING,
+                        Double.NaN,
+                        5,
+                        8
+                )
         );
-
-        assertEquals(0.0, set.getWeightKg());
     }
 
 
     @Test
-    void shouldAllowNegativeWeightForAssistedExercise() {
+    void shouldRejectInfiniteWeight() {
 
-        PlannedSet set = new PlannedSet(
-                SetType.WORKING,
-                -20.0,
-                8,
-                12
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new PlannedSet(
+                        SetType.WORKING,
+                        Double.POSITIVE_INFINITY,
+                        5,
+                        8
+                )
         );
+    }
 
-        assertEquals(-20.0, set.getWeightKg());
+
+    // ==================== Minimum Reps ====================
+
+    @Test
+    void shouldAcceptMinimumRepOfOne() {
+
+        PlannedSet set =
+                new PlannedSet(
+                        SetType.WORKING,
+                        70.0,
+                        1,
+                        1
+                );
+
+        assertEquals(1, set.getMinReps());
     }
 
 
     @Test
-    void shouldRejectNullMinReps() {
+    void shouldRejectNullMinimumReps() {
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -139,29 +216,14 @@ public class PlannedSetTest {
                         SetType.WORKING,
                         70.0,
                         null,
-                        6
+                        8
                 )
         );
     }
 
 
     @Test
-    void shouldRejectNullMaxReps() {
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new PlannedSet(
-                        SetType.WORKING,
-                        70.0,
-                        4,
-                        null
-                )
-        );
-    }
-
-
-    @Test
-    void shouldRejectMinRepsBelowOne() {
+    void shouldRejectZeroMinimumReps() {
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -169,22 +231,70 @@ public class PlannedSetTest {
                         SetType.WORKING,
                         70.0,
                         0,
-                        6
+                        8
                 )
         );
     }
 
 
+    // ==================== Maximum Reps ====================
+
     @Test
-    void shouldRejectMaxRepsLowerThanMinReps() {
+    void shouldAcceptMaximumRepsEqualToMinimumReps() {
+
+        PlannedSet set =
+                new PlannedSet(
+                        SetType.WORKING,
+                        70.0,
+                        5,
+                        5
+                );
+
+        assertEquals(5, set.getMaxReps());
+    }
+
+
+    @Test
+    void shouldAcceptHighRepRange() {
+
+        PlannedSet set =
+                new PlannedSet(
+                        SetType.WORKING,
+                        20.0,
+                        100,
+                        150
+                );
+
+        assertEquals(100, set.getMinReps());
+        assertEquals(150, set.getMaxReps());
+    }
+
+
+    @Test
+    void shouldRejectNullMaximumReps() {
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new PlannedSet(
                         SetType.WORKING,
                         70.0,
-                        8,
-                        6
+                        5,
+                        null
+                )
+        );
+    }
+
+
+    @Test
+    void shouldRejectMaximumRepsBelowMinimumReps() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new PlannedSet(
+                        SetType.WORKING,
+                        70.0,
+                        10,
+                        8
                 )
         );
     }

@@ -1,24 +1,22 @@
 package com.qianyi.sportstrainingassistant.model;
 
-import java.time.DayOfWeek;
 import java.util.List;
 
 public class TrainingDayPlan {
 
-    private DayOfWeek dayOfWeek;
-    private String workoutName;
-    private boolean restDay;
-    private List<ExercisePlan> exercises;
+    private final String workoutName;
+    private final DayType dayType;
+    private final List<ExercisePlan> exercises;
+
 
     public TrainingDayPlan(
-            DayOfWeek dayOfWeek,
             String workoutName,
-            boolean restDay,
+            DayType dayType,
             List<ExercisePlan> exercises) {
 
-        if (dayOfWeek == null) {
+        if (dayType == null) {
             throw new IllegalArgumentException(
-                    "Day of week cannot be null"
+                    "Day type cannot be null"
             );
         }
 
@@ -36,45 +34,35 @@ public class TrainingDayPlan {
             }
         }
 
-        if (restDay) {
-
-            if (!exercises.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Rest day cannot contain exercises"
-                );
-            }
-
-        } else {
-
-            if (workoutName == null || workoutName.isBlank()) {
-                throw new IllegalArgumentException(
-                        "Workout name cannot be null or blank for a training day"
-                );
-            }
-
-            if (exercises.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Training day must contain at least one exercise"
-                );
-            }
+        if (dayType == DayType.REST && !exercises.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Rest day cannot contain exercises"
+            );
         }
 
-        this.dayOfWeek = dayOfWeek;
-        this.workoutName = workoutName;
-        this.restDay = restDay;
+        if (dayType == DayType.TRAINING && exercises.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Training day must contain at least one exercise"
+            );
+        }
+
+        if (workoutName == null || workoutName.isBlank()) {
+            this.workoutName = null;
+        } else {
+            this.workoutName = workoutName.strip();
+        }
+
+        this.dayType = dayType;
         this.exercises = List.copyOf(exercises);
     }
 
-    public DayOfWeek getDayOfWeek() {
-        return dayOfWeek;
-    }
 
     public String getWorkoutName() {
         return workoutName;
     }
 
-    public boolean isRestDay() {
-        return restDay;
+    public DayType getDayType() {
+        return dayType;
     }
 
     public List<ExercisePlan> getExercises() {

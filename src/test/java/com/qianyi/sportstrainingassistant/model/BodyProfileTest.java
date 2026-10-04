@@ -1,82 +1,301 @@
 package com.qianyi.sportstrainingassistant.model;
+
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BodyProfileTest {
-    @Test
-    void bodyProfileShouldStoreAndRetrievePullUpStrength() {
-
-        // 1. 最底层：创建一条负重引体记录
-        PullUpRecord record = new PullUpRecord();
-        record.setExternalWeight(15);
-        record.setReps(5);
-        record.setRir(1);
 
 
-        // 2. 放进 4-6 reps 区间
-        PullUpModeStrength weighted = new PullUpModeStrength();
-        weighted.setFourToSix(record);
+    private BasicBodyInfo createBasicBodyInfo() {
 
-
-        // 3. 放进 PullUpStrength 的 weighted 模式
-        PullUpStrength pullUpStrength = new PullUpStrength();
-        pullUpStrength.setWeighted(weighted);
-
-
-        // 4. 放进 StrengthProfile
-        StrengthProfile strengthProfile = new StrengthProfile();
-        strengthProfile.setPullUp(pullUpStrength);
-
-
-        // 5. 最后放进 BodyProfile
-        BodyProfile bodyProfile = new BodyProfile();
-        bodyProfile.setStrengthProfile(strengthProfile);
-
-
-        // 6. 从 BodyProfile 一层一层取回来
-        PullUpRecord savedRecord = bodyProfile
-                .getStrengthProfile()
-                .getPullUp()
-                .getWeighted()
-                .getFourToSix();
-
-
-        // 7. 确认对象存在
-        assertNotNull(savedRecord);
-
-        // 8. 确认里面的数据没丢
-        assertEquals(15, savedRecord.getExternalWeight());
-        assertEquals(5, savedRecord.getReps());
-        assertEquals(1, savedRecord.getRir());
+        return new BasicBodyInfo(
+                175.0,
+                70.0,
+                20,
+                BiologicalSex.MALE
+        );
     }
+
+
+    // ==================== Valid Body Profile ====================
+
+    @Test
+    void shouldCreateBodyProfileWithBasicBodyInfo() {
+
+        BasicBodyInfo basicBodyInfo =
+                createBasicBodyInfo();
+
+        BodyProfile profile =
+                new BodyProfile(basicBodyInfo);
+
+        assertSame(
+                basicBodyInfo,
+                profile.getBasicBodyInfo()
+        );
+    }
+
+
     // ==================== Basic Body Info ====================
 
     @Test
-    void shouldStoreAndRetrieveBasicBodyInfo() {
+    void shouldRejectNullBasicBodyInfoWhenCreatingProfile() {
 
-        BasicBodyInfo basicBodyInfo = new BasicBodyInfo();
-
-        BodyProfile bodyProfile = new BodyProfile();
-        bodyProfile.setBasicBodyInfo(basicBodyInfo);
-
-        assertSame(basicBodyInfo, bodyProfile.getBasicBodyInfo());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new BodyProfile(null)
+        );
     }
 
-
-// ==================== Body Measurements ====================
 
     @Test
-    void shouldStoreAndRetrieveBodyMeasurements() {
+    void shouldAllowUpdatingBasicBodyInfo() {
 
-        BodyMeasurements bodyMeasurements = new BodyMeasurements();
+        BodyProfile profile =
+                new BodyProfile(
+                        createBasicBodyInfo()
+                );
 
-        BodyProfile bodyProfile = new BodyProfile();
-        bodyProfile.setBodyMeasurements(bodyMeasurements);
+        BasicBodyInfo updatedInfo =
+                new BasicBodyInfo(
+                        180.0,
+                        75.0,
+                        21,
+                        BiologicalSex.MALE
+                );
 
-        assertSame(bodyMeasurements, bodyProfile.getBodyMeasurements());
+        profile.setBasicBodyInfo(updatedInfo);
+
+        assertSame(
+                updatedInfo,
+                profile.getBasicBodyInfo()
+        );
     }
 
 
+    @Test
+    void shouldRejectSettingBasicBodyInfoToNull() {
+
+        BodyProfile profile =
+                new BodyProfile(
+                        createBasicBodyInfo()
+                );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> profile.setBasicBodyInfo(null)
+        );
+    }
+
+
+    // ==================== Body Measurements ====================
+
+    @Test
+    void bodyMeasurementsShouldBeOptional() {
+
+        BodyProfile profile =
+                new BodyProfile(
+                        createBasicBodyInfo()
+                );
+
+        assertNull(
+                profile.getBodyMeasurements()
+        );
+    }
+
+
+    @Test
+    void shouldStoreBodyMeasurements() {
+
+        BodyProfile profile =
+                new BodyProfile(
+                        createBasicBodyInfo()
+                );
+
+        BodyMeasurements measurements =
+                new BodyMeasurements();
+
+        measurements.setChestCircumferenceCm(100.0);
+        measurements.setWaistCircumferenceCm(80.0);
+
+        profile.setBodyMeasurements(measurements);
+
+        assertSame(
+                measurements,
+                profile.getBodyMeasurements()
+        );
+    }
+
+
+    @Test
+    void shouldAllowRemovingBodyMeasurements() {
+
+        BodyProfile profile =
+                new BodyProfile(
+                        createBasicBodyInfo()
+                );
+
+        BodyMeasurements measurements =
+                new BodyMeasurements();
+
+        profile.setBodyMeasurements(measurements);
+
+        profile.setBodyMeasurements(null);
+
+        assertNull(
+                profile.getBodyMeasurements()
+        );
+    }
+
+
+    // ==================== Strength Profile ====================
+
+    @Test
+    void strengthProfileShouldBeOptional() {
+
+        BodyProfile profile =
+                new BodyProfile(
+                        createBasicBodyInfo()
+                );
+
+        assertNull(
+                profile.getStrengthProfile()
+        );
+    }
+
+
+    @Test
+    void shouldStoreStrengthProfile() {
+
+        BodyProfile profile =
+                new BodyProfile(
+                        createBasicBodyInfo()
+                );
+
+        StrengthRecord record =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        1
+                );
+
+        ExerciseStrength benchPress =
+                new ExerciseStrength(
+                        List.of(record)
+                );
+
+        StrengthProfile strengthProfile =
+                new StrengthProfile();
+
+        strengthProfile.setBenchPress(benchPress);
+
+        profile.setStrengthProfile(strengthProfile);
+
+        assertSame(
+                strengthProfile,
+                profile.getStrengthProfile()
+        );
+
+        assertSame(
+                benchPress,
+                profile
+                        .getStrengthProfile()
+                        .getBenchPress()
+        );
+    }
+
+
+    @Test
+    void shouldAllowRemovingStrengthProfile() {
+
+        BodyProfile profile =
+                new BodyProfile(
+                        createBasicBodyInfo()
+                );
+
+        StrengthProfile strengthProfile =
+                new StrengthProfile();
+
+        profile.setStrengthProfile(strengthProfile);
+
+        profile.setStrengthProfile(null);
+
+        assertNull(
+                profile.getStrengthProfile()
+        );
+    }
+
+
+    // ==================== Complete Example ====================
+
+    @Test
+    void shouldCreateCompleteBodyProfile() {
+
+        BasicBodyInfo basicBodyInfo =
+                createBasicBodyInfo();
+
+        basicBodyInfo.setBodyFatPercentage(15.0);
+
+        BodyMeasurements measurements =
+                new BodyMeasurements();
+
+        measurements.setChestCircumferenceCm(100.0);
+        measurements.setWaistCircumferenceCm(80.0);
+        measurements.setArmCircumferenceCm(35.0);
+        measurements.setThighCircumferenceCm(60.0);
+
+        StrengthRecord benchRecord =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        1
+                );
+
+        ExerciseStrength benchStrength =
+                new ExerciseStrength(
+                        List.of(benchRecord)
+                );
+
+        PullUpRecord pullUpRecord =
+                new PullUpRecord(
+                        PullUpMode.WEIGHTED,
+                        20.0,
+                        5,
+                        1
+                );
+
+        PullUpStrength pullUpStrength =
+                new PullUpStrength(
+                        List.of(pullUpRecord)
+                );
+
+        StrengthProfile strengthProfile =
+                new StrengthProfile();
+
+        strengthProfile.setBenchPress(benchStrength);
+        strengthProfile.setPullUp(pullUpStrength);
+
+        BodyProfile profile =
+                new BodyProfile(basicBodyInfo);
+
+        profile.setBodyMeasurements(measurements);
+        profile.setStrengthProfile(strengthProfile);
+
+        assertSame(
+                basicBodyInfo,
+                profile.getBasicBodyInfo()
+        );
+
+        assertSame(
+                measurements,
+                profile.getBodyMeasurements()
+        );
+
+        assertSame(
+                strengthProfile,
+                profile.getStrengthProfile()
+        );
+    }
 }

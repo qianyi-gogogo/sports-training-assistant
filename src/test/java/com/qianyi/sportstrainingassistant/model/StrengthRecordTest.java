@@ -2,51 +2,119 @@ package com.qianyi.sportstrainingassistant.model;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class StrengthRecordTest {
+
+
+    // ==================== Valid Record ====================
+
+    @Test
+    void shouldCreateValidStrengthRecord() {
+
+        StrengthRecord record =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        1
+                );
+
+        assertEquals(80.0, record.getWeightKg(), 0.001);
+        assertEquals(5, record.getReps());
+        assertEquals(1, record.getRir());
+    }
+
+
+    @Test
+    void shouldAllowNullRir() {
+
+        StrengthRecord record =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        null
+                );
+
+        assertNull(record.getRir());
+    }
+
+
     // ==================== Weight ====================
 
     @Test
-    void weightShouldAcceptZero() {
+    void shouldAcceptWeightBoundaryValues() {
 
-        StrengthRecord record = new StrengthRecord();
+        StrengthRecord minimum =
+                new StrengthRecord(
+                        0.0,
+                        5,
+                        1
+                );
 
-        assertDoesNotThrow(
-                () -> record.setWeight(0.0)
-        );
+        StrengthRecord maximum =
+                new StrengthRecord(
+                        500.0,
+                        5,
+                        1
+                );
+
+        assertEquals(0.0, minimum.getWeightKg(), 0.001);
+        assertEquals(500.0, maximum.getWeightKg(), 0.001);
     }
 
-    @Test
-    void weightShouldAcceptMaximumValue() {
-
-        StrengthRecord record = new StrengthRecord();
-
-        assertDoesNotThrow(
-                () -> record.setWeight(1000.0)
-        );
-    }
 
     @Test
-    void weightShouldRejectNegativeValue() {
-
-        StrengthRecord record = new StrengthRecord();
+    void shouldRejectNegativeWeight() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> record.setWeight(-1.0)
+                () -> new StrengthRecord(
+                        -0.1,
+                        5,
+                        1
+                )
         );
     }
 
-    @Test
-    void weightShouldRejectValueAboveMaximum() {
 
-        StrengthRecord record = new StrengthRecord();
+    @Test
+    void shouldRejectWeightAboveMaximum() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> record.setWeight(1001.0)
+                () -> new StrengthRecord(
+                        500.1,
+                        5,
+                        1
+                )
+        );
+    }
+
+
+    @Test
+    void shouldRejectNaNWeight() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new StrengthRecord(
+                        Double.NaN,
+                        5,
+                        1
+                )
+        );
+    }
+
+
+    @Test
+    void shouldRejectInfiniteWeight() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new StrengthRecord(
+                        Double.POSITIVE_INFINITY,
+                        5,
+                        1
+                )
         );
     }
 
@@ -54,84 +122,109 @@ public class StrengthRecordTest {
     // ==================== Reps ====================
 
     @Test
-    void repsShouldAcceptPositiveValue() {
+    void shouldAcceptOneRep() {
 
-        StrengthRecord record = new StrengthRecord();
+        StrengthRecord record =
+                new StrengthRecord(
+                        80.0,
+                        1,
+                        1
+                );
 
-        assertDoesNotThrow(
-                () -> record.setReps(5)
-        );
+        assertEquals(1, record.getReps());
     }
 
-    @Test
-    void repsShouldRejectZero() {
 
-        StrengthRecord record = new StrengthRecord();
+    @Test
+    void shouldAcceptHighRepCount() {
+
+        StrengthRecord record =
+                new StrengthRecord(
+                        20.0,
+                        150,
+                        3
+                );
+
+        assertEquals(150, record.getReps());
+    }
+
+
+    @Test
+    void shouldRejectZeroReps() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> record.setReps(0)
+                () -> new StrengthRecord(
+                        80.0,
+                        0,
+                        1
+                )
+        );
+    }
+
+
+    @Test
+    void shouldRejectNegativeReps() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new StrengthRecord(
+                        80.0,
+                        -1,
+                        1
+                )
         );
     }
 
 
     // ==================== RIR ====================
-    // ==================== RIR Validation ====================
-
-    /*
-     * RIR (Reps In Reserve) must be between 0 and 5.
-     *
-     * Valid range:
-     * 0 <= RIR <= 5
-     *
-     * RIR < 0:
-     * -> invalid
-     * -> throw IllegalArgumentException
-     *
-     * RIR > 5:
-     * -> invalid
-     * -> throw IllegalArgumentException
-     */
 
     @Test
-    void rirShouldAcceptZero() {
+    void shouldAcceptRirBoundaryValues() {
 
-        StrengthRecord record = new StrengthRecord();
+        StrengthRecord zeroRir =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        0
+                );
 
-        assertDoesNotThrow(
-                () -> record.setRir(0)
-        );
+        StrengthRecord fiveRir =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        5
+                );
+
+        assertEquals(0, zeroRir.getRir());
+        assertEquals(5, fiveRir.getRir());
     }
 
-    @Test
-    void rirShouldAcceptFive() {
-
-        StrengthRecord record = new StrengthRecord();
-
-        assertDoesNotThrow(
-                () -> record.setRir(5)
-        );
-    }
 
     @Test
-    void rirShouldRejectNegativeValue() {
-
-        StrengthRecord record = new StrengthRecord();
+    void shouldRejectNegativeRir() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> record.setRir(-1)
+                () -> new StrengthRecord(
+                        80.0,
+                        5,
+                        -1
+                )
         );
     }
 
-    @Test
-    void rirShouldRejectValueAboveFive() {
 
-        StrengthRecord record = new StrengthRecord();
+    @Test
+    void shouldRejectRirAboveFive() {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> record.setRir(6)
+                () -> new StrengthRecord(
+                        80.0,
+                        5,
+                        6
+                )
         );
     }
 }

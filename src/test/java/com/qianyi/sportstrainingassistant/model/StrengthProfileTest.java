@@ -1,113 +1,193 @@
 package com.qianyi.sportstrainingassistant.model;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
 
 public class StrengthProfileTest {
 
-    @Test
-    void shouldSetAndGetBenchPress() {
-        // ==================== Bench Press ====================
 
-        // Create a bench press strength object
-        ExerciseStrength benchPress = new ExerciseStrength();
+    private ExerciseStrength createExerciseStrength() {
 
-        // Create StrengthProfile
-        StrengthProfile profile = new StrengthProfile();
+        StrengthRecord record =
+                new StrengthRecord(
+                        80.0,
+                        5,
+                        1
+                );
 
-        // Store bench press strength
-        profile.setBenchPress(benchPress);
-
-        // Verify that the same object can be retrieved
-        assertSame(benchPress, profile.getBenchPress());
-    }
-    // ==================== Barbell Row ====================
-
-    @Test
-    void shouldSetAndGetBarbellRow() {
-
-        ExerciseStrength barbellRow = new ExerciseStrength();
-
-        StrengthProfile profile = new StrengthProfile();
-        profile.setBarbellRow(barbellRow);
-
-        assertSame(barbellRow, profile.getBarbellRow());
+        return new ExerciseStrength(
+                List.of(record)
+        );
     }
 
 
-    // ==================== Strict Press ====================
+    private PullUpStrength createPullUpStrength() {
 
-    @Test
-    void shouldSetAndGetStrictPress() {
+        PullUpRecord record =
+                new PullUpRecord(
+                        PullUpMode.WEIGHTED,
+                        20.0,
+                        5,
+                        1
+                );
 
-        ExerciseStrength strictPress = new ExerciseStrength();
-
-        StrengthProfile profile = new StrengthProfile();
-        profile.setStrictPress(strictPress);
-
-        assertSame(strictPress, profile.getStrictPress());
+        return new PullUpStrength(
+                List.of(record)
+        );
     }
 
 
-    // ==================== Dumbbell Shoulder Press ====================
+    // ==================== Chest ====================
 
     @Test
-    void shouldSetAndGetDumbbellShoulderPress() {
+    void shouldStoreAndRetrieveBenchPress() {
 
-        ExerciseStrength dumbbellShoulderPress = new ExerciseStrength();
+        ExerciseStrength strength =
+                createExerciseStrength();
 
-        StrengthProfile profile = new StrengthProfile();
-        profile.setDumbbellShoulderPress(dumbbellShoulderPress);
+        StrengthProfile profile =
+                new StrengthProfile();
+
+        profile.setBenchPress(strength);
 
         assertSame(
-                dumbbellShoulderPress,
+                strength,
+                profile.getBenchPress()
+        );
+    }
+
+
+    // ==================== Back ====================
+
+    @Test
+    void shouldStoreAndRetrieveBarbellRow() {
+
+        ExerciseStrength strength =
+                createExerciseStrength();
+
+        StrengthProfile profile =
+                new StrengthProfile();
+
+        profile.setBarbellRow(strength);
+
+        assertSame(
+                strength,
+                profile.getBarbellRow()
+        );
+    }
+
+
+    @Test
+    void shouldStoreAndRetrievePullUp() {
+
+        PullUpStrength strength =
+                createPullUpStrength();
+
+        StrengthProfile profile =
+                new StrengthProfile();
+
+        profile.setPullUp(strength);
+
+        assertSame(
+                strength,
+                profile.getPullUp()
+        );
+    }
+
+
+    // ==================== Shoulder ====================
+
+    @Test
+    void shouldStoreAndRetrieveStrictPress() {
+
+        ExerciseStrength strength =
+                createExerciseStrength();
+
+        StrengthProfile profile =
+                new StrengthProfile();
+
+        profile.setStrictPress(strength);
+
+        assertSame(
+                strength,
+                profile.getStrictPress()
+        );
+    }
+
+
+    @Test
+    void shouldStoreAndRetrieveDumbbellShoulderPress() {
+
+        ExerciseStrength strength =
+                createExerciseStrength();
+
+        StrengthProfile profile =
+                new StrengthProfile();
+
+        profile.setDumbbellShoulderPress(strength);
+
+        assertSame(
+                strength,
                 profile.getDumbbellShoulderPress()
         );
     }
 
 
-    // ==================== Squat ====================
+    // ==================== Legs ====================
 
     @Test
-    void shouldSetAndGetSquat() {
+    void shouldStoreAndRetrieveSquat() {
 
-        ExerciseStrength squat = new ExerciseStrength();
+        ExerciseStrength strength =
+                createExerciseStrength();
 
-        StrengthProfile profile = new StrengthProfile();
-        profile.setSquat(squat);
+        StrengthProfile profile =
+                new StrengthProfile();
 
-        assertSame(squat, profile.getSquat());
+        profile.setSquat(strength);
+
+        assertSame(
+                strength,
+                profile.getSquat()
+        );
     }
 
 
-    // ==================== Leg Press ====================
-
     @Test
-    void shouldSetAndGetLegPress() {
+    void shouldStoreAndRetrieveLegPress() {
 
-        ExerciseStrength legPress = new ExerciseStrength();
+        ExerciseStrength strength =
+                createExerciseStrength();
 
-        StrengthProfile profile = new StrengthProfile();
-        profile.setLegPress(legPress);
+        StrengthProfile profile =
+                new StrengthProfile();
 
-        assertSame(legPress, profile.getLegPress());
-    }
-// ==================== Pull Up ====================
+        profile.setLegPress(strength);
 
-    @Test
-    void shouldSetAndGetPullUp() {
-
-        PullUpStrength pullUp = new PullUpStrength();
-
-        StrengthProfile profile = new StrengthProfile();
-        profile.setPullUp(pullUp);
-
-        assertSame(pullUp, profile.getPullUp());
+        assertSame(
+                strength,
+                profile.getLegPress()
+        );
     }
 
+
+    // ==================== Optional Data ====================
+
+    @Test
+    void strengthFieldsShouldBeOptional() {
+
+        StrengthProfile profile =
+                new StrengthProfile();
+
+        assertNull(profile.getBenchPress());
+        assertNull(profile.getBarbellRow());
+        assertNull(profile.getPullUp());
+        assertNull(profile.getStrictPress());
+        assertNull(profile.getDumbbellShoulderPress());
+        assertNull(profile.getSquat());
+        assertNull(profile.getLegPress());
+    }
 }
-
-
-
-

@@ -4,8 +4,9 @@ import java.util.List;
 
 public class ExercisePlan {
 
-    private String exerciseName;
-    private List<PlannedSet> plannedSets;
+    private final String exerciseName;
+    private final List<PlannedSet> plannedSets;
+
 
     public ExercisePlan(
             String exerciseName,
@@ -31,9 +32,10 @@ public class ExercisePlan {
             }
         }
 
-        this.exerciseName = exerciseName;
+        this.exerciseName = exerciseName.strip();
         this.plannedSets = List.copyOf(plannedSets);
     }
+
 
     public String getExerciseName() {
         return exerciseName;

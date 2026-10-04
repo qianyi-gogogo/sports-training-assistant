@@ -2,118 +2,93 @@ package com.qianyi.sportstrainingassistant.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ExercisePlanTest {
 
-    @Test
-    void shouldCreateExercisePlanWithNameAndSets() {
 
-        PlannedSet warmUpSet = new PlannedSet(
-                SetType.WARM_UP,
-                40.0,
-                8,
-                10
-        );
-
-        PlannedSet workingSet = new PlannedSet(
+    private PlannedSet createSet() {
+        return new PlannedSet(
                 SetType.WORKING,
                 70.0,
-                4,
-                6
-        );
-
-        List<PlannedSet> sets = List.of(
-                warmUpSet,
-                workingSet
-        );
-
-        ExercisePlan exercisePlan = new ExercisePlan(
-                "Bench Press",
-                sets
-        );
-
-        assertEquals(
-                "Bench Press",
-                exercisePlan.getExerciseName()
-        );
-
-        assertEquals(
-                sets,
-                exercisePlan.getPlannedSets()
+                6,
+                10
         );
     }
 
 
+    // ==================== Valid Exercise Plan ====================
+
     @Test
-    void shouldPreserveSetOrder() {
+    void shouldCreateValidExercisePlan() {
 
-        PlannedSet set1 = new PlannedSet(
-                SetType.WARM_UP,
-                20.0,
-                15,
-                15
-        );
+        PlannedSet set = createSet();
 
-        PlannedSet set2 = new PlannedSet(
-                SetType.WARM_UP,
-                40.0,
-                8,
-                10
-        );
+        ExercisePlan exercise =
+                new ExercisePlan(
+                        "Bench Press",
+                        List.of(set)
+                );
 
-        PlannedSet set3 = new PlannedSet(
-                SetType.WORKING,
-                70.0,
-                4,
-                5
-        );
-
-        List<PlannedSet> sets = List.of(
-                set1,
-                set2,
-                set3
-        );
-
-        ExercisePlan exercisePlan = new ExercisePlan(
+        assertEquals(
                 "Bench Press",
-                sets
+                exercise.getExerciseName()
         );
 
         assertEquals(
-                set1,
-                exercisePlan.getPlannedSets().get(0)
+                1,
+                exercise.getPlannedSets().size()
         );
 
-        assertEquals(
-                set2,
-                exercisePlan.getPlannedSets().get(1)
-        );
-
-        assertEquals(
-                set3,
-                exercisePlan.getPlannedSets().get(2)
+        assertSame(
+                set,
+                exercise.getPlannedSets().get(0)
         );
     }
-    // ==================== Validation ====================
+
+
+    // ==================== Exercise Name ====================
+
+    @Test
+    void shouldTrimExerciseName() {
+
+        ExercisePlan exercise =
+                new ExercisePlan(
+                        "   Bench Press   ",
+                        List.of(createSet())
+                );
+
+        assertEquals(
+                "Bench Press",
+                exercise.getExerciseName()
+        );
+    }
+
 
     @Test
     void shouldRejectNullExerciseName() {
-
-        PlannedSet set = new PlannedSet(
-                SetType.WORKING,
-                70.0,
-                4,
-                6
-        );
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new ExercisePlan(
                         null,
-                        List.of(set)
+                        List.of(createSet())
+                )
+        );
+    }
+
+
+    @Test
+    void shouldRejectEmptyExerciseName() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ExercisePlan(
+                        "",
+                        List.of(createSet())
                 )
         );
     }
@@ -122,19 +97,58 @@ public class ExercisePlanTest {
     @Test
     void shouldRejectBlankExerciseName() {
 
-        PlannedSet set = new PlannedSet(
-                SetType.WORKING,
-                70.0,
-                4,
-                6
-        );
-
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new ExercisePlan(
                         "   ",
-                        List.of(set)
+                        List.of(createSet())
                 )
+        );
+    }
+
+
+    // ==================== Planned Sets ====================
+
+    @Test
+    void shouldAcceptMultiplePlannedSets() {
+
+        PlannedSet set1 =
+                new PlannedSet(
+                        SetType.WARM_UP,
+                        40.0,
+                        8,
+                        10
+                );
+
+        PlannedSet set2 =
+                new PlannedSet(
+                        SetType.WORKING,
+                        70.0,
+                        6,
+                        8
+                );
+
+        PlannedSet set3 =
+                new PlannedSet(
+                        SetType.WORKING,
+                        65.0,
+                        8,
+                        10
+                );
+
+        ExercisePlan exercise =
+                new ExercisePlan(
+                        "Bench Press",
+                        List.of(
+                                set1,
+                                set2,
+                                set3
+                        )
+                );
+
+        assertEquals(
+                3,
+                exercise.getPlannedSets().size()
         );
     }
 
@@ -166,19 +180,12 @@ public class ExercisePlanTest {
 
 
     @Test
-    void shouldRejectNullInsidePlannedSets() {
+    void shouldRejectNullPlannedSet() {
 
-        List<PlannedSet> sets = new java.util.ArrayList<>();
+        List<PlannedSet> sets =
+                new ArrayList<>();
 
-        sets.add(
-                new PlannedSet(
-                        SetType.WORKING,
-                        70.0,
-                        4,
-                        6
-                )
-        );
-
+        sets.add(createSet());
         sets.add(null);
 
         assertThrows(
@@ -191,35 +198,75 @@ public class ExercisePlanTest {
     }
 
 
+    // ==================== Defensive Copy ====================
+
     @Test
     void shouldProtectPlannedSetsFromExternalModification() {
 
-        List<PlannedSet> sets = new java.util.ArrayList<>();
+        List<PlannedSet> originalSets =
+                new ArrayList<>();
 
-        PlannedSet firstSet = new PlannedSet(
-                SetType.WORKING,
-                70.0,
-                4,
-                6
-        );
+        originalSets.add(createSet());
 
-        sets.add(firstSet);
+        ExercisePlan exercise =
+                new ExercisePlan(
+                        "Bench Press",
+                        originalSets
+                );
 
-        ExercisePlan exercisePlan = new ExercisePlan(
-                "Bench Press",
-                sets
-        );
-
-        sets.clear();
+        originalSets.clear();
 
         assertEquals(
                 1,
-                exercisePlan.getPlannedSets().size()
+                exercise.getPlannedSets().size()
         );
+    }
+
+
+    @Test
+    void returnedPlannedSetsShouldNotBeModifiable() {
+
+        ExercisePlan exercise =
+                new ExercisePlan(
+                        "Bench Press",
+                        List.of(createSet())
+                );
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> exercise.getPlannedSets().clear()
+        );
+    }
+
+
+    // ==================== No Training Rule Limit ====================
+
+    @Test
+    void shouldAcceptManyPlannedSets() {
+
+        List<PlannedSet> sets =
+                new ArrayList<>();
+
+        for (int i = 0; i < 20; i++) {
+            sets.add(
+                    new PlannedSet(
+                            SetType.WORKING,
+                            50.0,
+                            5,
+                            10
+                    )
+            );
+        }
+
+        ExercisePlan exercise =
+                new ExercisePlan(
+                        "Bench Press",
+                        sets
+                );
 
         assertEquals(
-                firstSet,
-                exercisePlan.getPlannedSets().get(0)
+                20,
+                exercise.getPlannedSets().size()
         );
     }
 }

@@ -9,22 +9,42 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TrainingGoalTest {
 
-    // ==================== Test Helpers ====================
 
-    private List<TrainingGoalType> validGoalPriorities() {
+    private List<TrainingGoalType> createAllGoals() {
         return List.of(
                 TrainingGoalType.MUSCLE_GAIN,
-                TrainingGoalType.FAT_LOSS,
                 TrainingGoalType.STRENGTH,
+                TrainingGoalType.FAT_LOSS,
                 TrainingGoalType.ENDURANCE,
                 TrainingGoalType.SPORT_PERFORMANCE
         );
     }
 
-    private TrainingGoal createValidTrainingGoal() {
-        return new TrainingGoal(
-                validGoalPriorities(),
-                null
+
+    // ==================== Valid Training Goal ====================
+
+    @Test
+    void shouldCreateValidTrainingGoal() {
+
+        TrainingGoal goal =
+                new TrainingGoal(
+                        createAllGoals(),
+                        "Improve chest development"
+                );
+
+        assertEquals(
+                5,
+                goal.getGoalPriorities().size()
+        );
+
+        assertEquals(
+                TrainingGoalType.MUSCLE_GAIN,
+                goal.getGoalPriorities().get(0)
+        );
+
+        assertEquals(
+                "Improve chest development",
+                goal.getSpecificGoalDetails()
         );
     }
 
@@ -32,161 +52,42 @@ public class TrainingGoalTest {
     // ==================== Goal Priorities ====================
 
     @Test
-    void shouldSetAllFiveGoalPriorities() {
-
-        TrainingGoal goal = createValidTrainingGoal();
-
-        assertEquals(
-                validGoalPriorities(),
-                goal.getGoalPriorities()
-        );
-    }
-
-
-    @Test
     void shouldPreserveGoalPriorityOrder() {
 
-        TrainingGoal goal = createValidTrainingGoal();
+        List<TrainingGoalType> priorities =
+                List.of(
+                        TrainingGoalType.STRENGTH,
+                        TrainingGoalType.MUSCLE_GAIN,
+                        TrainingGoalType.SPORT_PERFORMANCE,
+                        TrainingGoalType.ENDURANCE,
+                        TrainingGoalType.FAT_LOSS
+                );
 
-        List<TrainingGoalType> priorities = List.of(
+        TrainingGoal goal =
+                new TrainingGoal(
+                        priorities,
+                        null
+                );
+
+        assertEquals(
                 TrainingGoalType.STRENGTH,
-                TrainingGoalType.MUSCLE_GAIN,
-                TrainingGoalType.SPORT_PERFORMANCE,
-                TrainingGoalType.ENDURANCE,
-                TrainingGoalType.FAT_LOSS
+                goal.getGoalPriorities().get(0)
         );
 
-        goal.setGoalPriorities(priorities);
+        assertEquals(
+                TrainingGoalType.MUSCLE_GAIN,
+                goal.getGoalPriorities().get(1)
+        );
 
-        assertEquals(priorities, goal.getGoalPriorities());
+        assertEquals(
+                TrainingGoalType.FAT_LOSS,
+                goal.getGoalPriorities().get(4)
+        );
     }
 
 
     @Test
     void shouldRejectNullGoalPriorities() {
-
-        TrainingGoal goal = createValidTrainingGoal();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> goal.setGoalPriorities(null)
-        );
-    }
-
-
-    @Test
-    void shouldRejectIncompleteGoalPriorities() {
-
-        TrainingGoal goal = createValidTrainingGoal();
-
-        List<TrainingGoalType> priorities = List.of(
-                TrainingGoalType.MUSCLE_GAIN,
-                TrainingGoalType.STRENGTH
-        );
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> goal.setGoalPriorities(priorities)
-        );
-    }
-
-
-    @Test
-    void shouldRejectNullInsideGoalPriorities() {
-
-        TrainingGoal goal = createValidTrainingGoal();
-
-        List<TrainingGoalType> priorities = new ArrayList<>();
-        priorities.add(TrainingGoalType.MUSCLE_GAIN);
-        priorities.add(TrainingGoalType.FAT_LOSS);
-        priorities.add(TrainingGoalType.STRENGTH);
-        priorities.add(TrainingGoalType.ENDURANCE);
-        priorities.add(null);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> goal.setGoalPriorities(priorities)
-        );
-    }
-
-
-    @Test
-    void shouldRejectDuplicateGoalPriorities() {
-
-        TrainingGoal goal = createValidTrainingGoal();
-
-        List<TrainingGoalType> priorities = List.of(
-                TrainingGoalType.MUSCLE_GAIN,
-                TrainingGoalType.FAT_LOSS,
-                TrainingGoalType.STRENGTH,
-                TrainingGoalType.ENDURANCE,
-                TrainingGoalType.MUSCLE_GAIN
-        );
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> goal.setGoalPriorities(priorities)
-        );
-    }
-
-
-    @Test
-    void shouldProtectGoalPrioritiesFromExternalModification() {
-
-        List<TrainingGoalType> priorities = new ArrayList<>(
-                validGoalPriorities()
-        );
-
-        TrainingGoal goal = new TrainingGoal(
-                priorities,
-                null
-        );
-
-        priorities.set(
-                0,
-                TrainingGoalType.STRENGTH
-        );
-
-        assertEquals(
-                TrainingGoalType.MUSCLE_GAIN,
-                goal.getGoalPriorities().get(0)
-        );
-    }
-
-
-    // ==================== Specific Goal Details ====================
-
-    @Test
-    void shouldAcceptSpecificGoalDetails() {
-
-        TrainingGoal goal = new TrainingGoal(
-                validGoalPriorities(),
-                "I want to prioritize chest development."
-        );
-
-        assertEquals(
-                "I want to prioritize chest development.",
-                goal.getSpecificGoalDetails()
-        );
-    }
-
-
-    @Test
-    void shouldAllowNullSpecificGoalDetails() {
-
-        TrainingGoal goal = new TrainingGoal(
-                validGoalPriorities(),
-                null
-        );
-
-        assertNull(goal.getSpecificGoalDetails());
-    }
-
-
-    // ==================== Constructor Validation ====================
-
-    @Test
-    void shouldRejectNullGoalPrioritiesInConstructor() {
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -199,12 +100,15 @@ public class TrainingGoalTest {
 
 
     @Test
-    void shouldRejectIncompleteGoalPrioritiesInConstructor() {
+    void shouldRejectMissingGoal() {
 
-        List<TrainingGoalType> priorities = List.of(
-                TrainingGoalType.MUSCLE_GAIN,
-                TrainingGoalType.STRENGTH
-        );
+        List<TrainingGoalType> priorities =
+                List.of(
+                        TrainingGoalType.MUSCLE_GAIN,
+                        TrainingGoalType.STRENGTH,
+                        TrainingGoalType.FAT_LOSS,
+                        TrainingGoalType.ENDURANCE
+                );
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -217,15 +121,16 @@ public class TrainingGoalTest {
 
 
     @Test
-    void shouldRejectDuplicateGoalPrioritiesInConstructor() {
+    void shouldRejectDuplicateGoals() {
 
-        List<TrainingGoalType> priorities = List.of(
-                TrainingGoalType.MUSCLE_GAIN,
-                TrainingGoalType.FAT_LOSS,
-                TrainingGoalType.STRENGTH,
-                TrainingGoalType.ENDURANCE,
-                TrainingGoalType.MUSCLE_GAIN
-        );
+        List<TrainingGoalType> priorities =
+                List.of(
+                        TrainingGoalType.MUSCLE_GAIN,
+                        TrainingGoalType.MUSCLE_GAIN,
+                        TrainingGoalType.STRENGTH,
+                        TrainingGoalType.ENDURANCE,
+                        TrainingGoalType.SPORT_PERFORMANCE
+                );
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -233,6 +138,131 @@ public class TrainingGoalTest {
                         priorities,
                         null
                 )
+        );
+    }
+
+
+    @Test
+    void shouldRejectNullGoalInsidePriorityList() {
+
+        List<TrainingGoalType> priorities =
+                new ArrayList<>();
+
+        priorities.add(TrainingGoalType.MUSCLE_GAIN);
+        priorities.add(TrainingGoalType.STRENGTH);
+        priorities.add(null);
+        priorities.add(TrainingGoalType.ENDURANCE);
+        priorities.add(TrainingGoalType.SPORT_PERFORMANCE);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new TrainingGoal(
+                        priorities,
+                        null
+                )
+        );
+    }
+
+
+    // ==================== Defensive Copy ====================
+
+    @Test
+    void shouldProtectGoalPrioritiesFromExternalModification() {
+
+        List<TrainingGoalType> priorities =
+                new ArrayList<>(createAllGoals());
+
+        TrainingGoal goal =
+                new TrainingGoal(
+                        priorities,
+                        null
+                );
+
+        priorities.clear();
+
+        assertEquals(
+                5,
+                goal.getGoalPriorities().size()
+        );
+    }
+
+
+    @Test
+    void returnedGoalPrioritiesShouldNotBeModifiable() {
+
+        TrainingGoal goal =
+                new TrainingGoal(
+                        createAllGoals(),
+                        null
+                );
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> goal.getGoalPriorities().clear()
+        );
+    }
+
+
+    // ==================== Specific Goal Details ====================
+
+    @Test
+    void shouldAllowNullSpecificGoalDetails() {
+
+        TrainingGoal goal =
+                new TrainingGoal(
+                        createAllGoals(),
+                        null
+                );
+
+        assertNull(
+                goal.getSpecificGoalDetails()
+        );
+    }
+
+
+    @Test
+    void blankSpecificGoalDetailsShouldBecomeNull() {
+
+        TrainingGoal goal =
+                new TrainingGoal(
+                        createAllGoals(),
+                        "     "
+                );
+
+        assertNull(
+                goal.getSpecificGoalDetails()
+        );
+    }
+
+
+    @Test
+    void shouldStoreSpecificGoalDetails() {
+
+        TrainingGoal goal =
+                new TrainingGoal(
+                        createAllGoals(),
+                        "Increase upper-body muscle"
+                );
+
+        assertEquals(
+                "Increase upper-body muscle",
+                goal.getSpecificGoalDetails()
+        );
+    }
+
+
+    @Test
+    void shouldStripSpecificGoalDetails() {
+
+        TrainingGoal goal =
+                new TrainingGoal(
+                        createAllGoals(),
+                        "   Increase upper-body muscle   "
+                );
+
+        assertEquals(
+                "Increase upper-body muscle",
+                goal.getSpecificGoalDetails()
         );
     }
 }

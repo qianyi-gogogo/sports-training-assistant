@@ -1,193 +1,318 @@
 package com.qianyi.sportstrainingassistant.model;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+
 public class BodyMeasurementsTest {
-    // ==================== Chest Circumference ====================
+
+
+    // ==================== Chest ====================
 
     @Test
-    void shouldSetValidChestCircumference() {
+    void chestShouldAcceptValidValue() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
-        measurements.setChestCircumference(100.0);
+        measurements.setChestCircumferenceCm(100.0);
 
-        assertEquals(100.0, measurements.getChestCircumference(), 0.001);
+        assertEquals(
+                100.0,
+                measurements.getChestCircumferenceCm(),
+                0.001
+        );
     }
 
     @Test
-    void shouldAcceptChestCircumferenceBoundaryValues() {
+    void chestShouldAcceptBoundaryValues() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
-        measurements.setChestCircumference(40.0);
-        assertEquals(40.0, measurements.getChestCircumference(), 0.001);
+        measurements.setChestCircumferenceCm(40.0);
+        assertEquals(
+                40.0,
+                measurements.getChestCircumferenceCm(),
+                0.001
+        );
 
-        measurements.setChestCircumference(200.0);
-        assertEquals(200.0, measurements.getChestCircumference(), 0.001);
+        measurements.setChestCircumferenceCm(200.0);
+        assertEquals(
+                200.0,
+                measurements.getChestCircumferenceCm(),
+                0.001
+        );
     }
 
     @Test
-    void shouldRejectChestCircumferenceBelowMinimum() {
+    void chestShouldRejectValueBelowMinimum() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> measurements.setChestCircumference(39.9)
+                () -> measurements.setChestCircumferenceCm(39.9)
         );
     }
 
     @Test
-    void shouldRejectChestCircumferenceAboveMaximum() {
+    void chestShouldRejectValueAboveMaximum() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> measurements.setChestCircumference(200.1)
+                () -> measurements.setChestCircumferenceCm(200.1)
         );
     }
 
-
-    // ==================== Waist Circumference ====================
-
     @Test
-    void shouldSetValidWaistCircumference() {
-
-        BodyMeasurements measurements = new BodyMeasurements();
-
-        measurements.setWaistCircumference(80.0);
-
-        assertEquals(80.0, measurements.getWaistCircumference(), 0.001);
-    }
-
-    @Test
-    void shouldAcceptWaistCircumferenceBoundaryValues() {
-
-        BodyMeasurements measurements = new BodyMeasurements();
-
-        measurements.setWaistCircumference(30.0);
-        assertEquals(30.0, measurements.getWaistCircumference(), 0.001);
-
-        measurements.setWaistCircumference(200.0);
-        assertEquals(200.0, measurements.getWaistCircumference(), 0.001);
-    }
-
-    @Test
-    void shouldRejectWaistCircumferenceBelowMinimum() {
+    void chestShouldRejectNaN() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> measurements.setWaistCircumference(29.9)
+                () -> measurements.setChestCircumferenceCm(Double.NaN)
+        );
+    }
+
+
+    // ==================== Waist ====================
+
+    @Test
+    void waistShouldAcceptValidValue() {
+
+        BodyMeasurements measurements = new BodyMeasurements();
+
+        measurements.setWaistCircumferenceCm(80.0);
+
+        assertEquals(
+                80.0,
+                measurements.getWaistCircumferenceCm(),
+                0.001
         );
     }
 
     @Test
-    void shouldRejectWaistCircumferenceAboveMaximum() {
+    void waistShouldAcceptBoundaryValues() {
+
+        BodyMeasurements measurements = new BodyMeasurements();
+
+        measurements.setWaistCircumferenceCm(30.0);
+        assertEquals(
+                30.0,
+                measurements.getWaistCircumferenceCm(),
+                0.001
+        );
+
+        measurements.setWaistCircumferenceCm(200.0);
+        assertEquals(
+                200.0,
+                measurements.getWaistCircumferenceCm(),
+                0.001
+        );
+    }
+
+    @Test
+    void waistShouldRejectValueBelowMinimum() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> measurements.setWaistCircumference(200.1)
+                () -> measurements.setWaistCircumferenceCm(29.9)
         );
     }
 
-
-    // ==================== Arm Circumference ====================
-
     @Test
-    void shouldSetValidArmCircumference() {
-
-        BodyMeasurements measurements = new BodyMeasurements();
-
-        measurements.setArmCircumference(35.0);
-
-        assertEquals(35.0, measurements.getArmCircumference(), 0.001);
-    }
-
-    @Test
-    void shouldAcceptArmCircumferenceBoundaryValues() {
-
-        BodyMeasurements measurements = new BodyMeasurements();
-
-        measurements.setArmCircumference(10.0);
-        assertEquals(10.0, measurements.getArmCircumference(), 0.001);
-
-        measurements.setArmCircumference(80.0);
-        assertEquals(80.0, measurements.getArmCircumference(), 0.001);
-    }
-
-    @Test
-    void shouldRejectArmCircumferenceBelowMinimum() {
+    void waistShouldRejectValueAboveMaximum() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> measurements.setArmCircumference(9.9)
+                () -> measurements.setWaistCircumferenceCm(200.1)
         );
     }
 
     @Test
-    void shouldRejectArmCircumferenceAboveMaximum() {
+    void waistShouldRejectNaN() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> measurements.setArmCircumference(80.1)
+                () -> measurements.setWaistCircumferenceCm(Double.NaN)
         );
     }
 
 
-    // ==================== Thigh Circumference ====================
+    // ==================== Arm ====================
 
     @Test
-    void shouldSetValidThighCircumference() {
+    void armShouldAcceptValidValue() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
-        measurements.setThighCircumference(60.0);
+        measurements.setArmCircumferenceCm(35.0);
 
-        assertEquals(60.0, measurements.getThighCircumference(), 0.001);
+        assertEquals(
+                35.0,
+                measurements.getArmCircumferenceCm(),
+                0.001
+        );
     }
 
     @Test
-    void shouldAcceptThighCircumferenceBoundaryValues() {
+    void armShouldAcceptBoundaryValues() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
-        measurements.setThighCircumference(20.0);
-        assertEquals(20.0, measurements.getThighCircumference(), 0.001);
+        measurements.setArmCircumferenceCm(10.0);
+        assertEquals(
+                10.0,
+                measurements.getArmCircumferenceCm(),
+                0.001
+        );
 
-        measurements.setThighCircumference(120.0);
-        assertEquals(120.0, measurements.getThighCircumference(), 0.001);
+        measurements.setArmCircumferenceCm(80.0);
+        assertEquals(
+                80.0,
+                measurements.getArmCircumferenceCm(),
+                0.001
+        );
     }
 
     @Test
-    void shouldRejectThighCircumferenceBelowMinimum() {
+    void armShouldRejectValueBelowMinimum() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> measurements.setThighCircumference(19.9)
+                () -> measurements.setArmCircumferenceCm(9.9)
         );
     }
 
     @Test
-    void shouldRejectThighCircumferenceAboveMaximum() {
+    void armShouldRejectValueAboveMaximum() {
 
         BodyMeasurements measurements = new BodyMeasurements();
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> measurements.setThighCircumference(120.1)
+                () -> measurements.setArmCircumferenceCm(80.1)
         );
+    }
+
+    @Test
+    void armShouldRejectNaN() {
+
+        BodyMeasurements measurements = new BodyMeasurements();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> measurements.setArmCircumferenceCm(Double.NaN)
+        );
+    }
+
+
+    // ==================== Thigh ====================
+
+    @Test
+    void thighShouldAcceptValidValue() {
+
+        BodyMeasurements measurements = new BodyMeasurements();
+
+        measurements.setThighCircumferenceCm(60.0);
+
+        assertEquals(
+                60.0,
+                measurements.getThighCircumferenceCm(),
+                0.001
+        );
+    }
+
+    @Test
+    void thighShouldAcceptBoundaryValues() {
+
+        BodyMeasurements measurements = new BodyMeasurements();
+
+        measurements.setThighCircumferenceCm(20.0);
+        assertEquals(
+                20.0,
+                measurements.getThighCircumferenceCm(),
+                0.001
+        );
+
+        measurements.setThighCircumferenceCm(120.0);
+        assertEquals(
+                120.0,
+                measurements.getThighCircumferenceCm(),
+                0.001
+        );
+    }
+
+    @Test
+    void thighShouldRejectValueBelowMinimum() {
+
+        BodyMeasurements measurements = new BodyMeasurements();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> measurements.setThighCircumferenceCm(19.9)
+        );
+    }
+
+    @Test
+    void thighShouldRejectValueAboveMaximum() {
+
+        BodyMeasurements measurements = new BodyMeasurements();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> measurements.setThighCircumferenceCm(120.1)
+        );
+    }
+
+    @Test
+    void thighShouldRejectNaN() {
+
+        BodyMeasurements measurements = new BodyMeasurements();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> measurements.setThighCircumferenceCm(Double.NaN)
+        );
+    }
+
+
+    // ==================== Optional Values ====================
+
+    @Test
+    void allMeasurementsShouldAllowNull() {
+
+        BodyMeasurements measurements = new BodyMeasurements();
+
+        assertDoesNotThrow(
+                () -> measurements.setChestCircumferenceCm(null)
+        );
+
+        assertDoesNotThrow(
+                () -> measurements.setWaistCircumferenceCm(null)
+        );
+
+        assertDoesNotThrow(
+                () -> measurements.setArmCircumferenceCm(null)
+        );
+
+        assertDoesNotThrow(
+                () -> measurements.setThighCircumferenceCm(null)
+        );
+
+        assertNull(measurements.getChestCircumferenceCm());
+        assertNull(measurements.getWaistCircumferenceCm());
+        assertNull(measurements.getArmCircumferenceCm());
+        assertNull(measurements.getThighCircumferenceCm());
     }
 }

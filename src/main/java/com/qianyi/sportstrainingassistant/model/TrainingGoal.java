@@ -12,7 +12,7 @@ public class TrainingGoal {
             String specificGoalDetails) {
 
         setGoalPriorities(goalPriorities);
-        this.specificGoalDetails = specificGoalDetails;
+        setSpecificGoalDetails(specificGoalDetails);
     }
 
     public List<TrainingGoalType> getGoalPriorities() {
@@ -56,6 +56,11 @@ public class TrainingGoal {
     }
 
     public void setSpecificGoalDetails(String specificGoalDetails) {
-        this.specificGoalDetails = specificGoalDetails;
+        if (specificGoalDetails == null || specificGoalDetails.isBlank()) {
+            this.specificGoalDetails = null;
+            return;
+        }
+
+        this.specificGoalDetails = specificGoalDetails.strip();
     }
 }

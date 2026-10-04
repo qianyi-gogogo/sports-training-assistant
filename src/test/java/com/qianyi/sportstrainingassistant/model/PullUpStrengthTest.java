@@ -1,159 +1,227 @@
 package com.qianyi.sportstrainingassistant.model;
 
-
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import java.util.ArrayList;
+import java.util.List;
 
-    public class PullUpStrengthTest {
+import static org.junit.jupiter.api.Assertions.*;
 
-        @Test
-        void bodyweightShouldRejectExternalWeight() {
+public class PullUpStrengthTest {
 
-            PullUpRecord record = new PullUpRecord();
-            record.setExternalWeight(10);
-            record.setReps(5);
-            record.setRir(1);
 
-            PullUpModeStrength bodyweight = new PullUpModeStrength();
-            bodyweight.setFourToSix(record);
+    // ==================== Valid Records ====================
 
-            PullUpStrength pullUpStrength = new PullUpStrength();
+    @Test
+    void shouldCreatePullUpStrengthWithOneRecord() {
 
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> pullUpStrength.setBodyweight(bodyweight)
-            );
-        }
+        PullUpRecord record =
+                new PullUpRecord(
+                        PullUpMode.BODYWEIGHT,
+                        0.0,
+                        10,
+                        1
+                );
 
-        @Test
-        void weightedPullUpShouldAcceptCorrectWeightOrder() {
+        PullUpStrength strength =
+                new PullUpStrength(
+                        List.of(record)
+                );
 
-            // 1-2 reps: +25 kg
-            PullUpRecord oneToTwoRecord = new PullUpRecord();
-            oneToTwoRecord.setExternalWeight(25);
-            oneToTwoRecord.setReps(2);
-            oneToTwoRecord.setRir(1);
-
-            // 4-6 reps: +15 kg
-            PullUpRecord fourToSixRecord = new PullUpRecord();
-            fourToSixRecord.setExternalWeight(15);
-            fourToSixRecord.setReps(5);
-            fourToSixRecord.setRir(1);
-
-            // 10-12 reps: +5 kg
-            PullUpRecord tenToTwelveRecord = new PullUpRecord();
-            tenToTwelveRecord.setExternalWeight(5);
-            tenToTwelveRecord.setReps(10);
-            tenToTwelveRecord.setRir(1);
-
-            PullUpModeStrength weighted = new PullUpModeStrength();
-
-            weighted.setOneToTwo(oneToTwoRecord);
-            weighted.setFourToSix(fourToSixRecord);
-            weighted.setTenToTwelve(tenToTwelveRecord);
-
-            PullUpStrength pullUpStrength = new PullUpStrength();
-
-            assertDoesNotThrow(
-                    () -> pullUpStrength.setWeighted(weighted)
-            );
-        }
-        @Test
-        void assistedPullUpShouldAcceptCorrectAssistanceOrder() {
-
-            // 1-2 reps: 5 kg assistance
-            PullUpRecord oneToTwoRecord = new PullUpRecord();
-            oneToTwoRecord.setExternalWeight(5);
-            oneToTwoRecord.setReps(2);
-            oneToTwoRecord.setRir(1);
-
-            // 4-6 reps: 15 kg assistance
-            PullUpRecord fourToSixRecord = new PullUpRecord();
-            fourToSixRecord.setExternalWeight(15);
-            fourToSixRecord.setReps(5);
-            fourToSixRecord.setRir(1);
-
-            // 10-12 reps: 25 kg assistance
-            PullUpRecord tenToTwelveRecord = new PullUpRecord();
-            tenToTwelveRecord.setExternalWeight(25);
-            tenToTwelveRecord.setReps(10);
-            tenToTwelveRecord.setRir(1);
-
-            PullUpModeStrength assisted = new PullUpModeStrength();
-
-            assisted.setOneToTwo(oneToTwoRecord);
-            assisted.setFourToSix(fourToSixRecord);
-            assisted.setTenToTwelve(tenToTwelveRecord);
-
-            PullUpStrength pullUpStrength = new PullUpStrength();
-
-            assertDoesNotThrow(
-                    () -> pullUpStrength.setAssisted(assisted)
-            );
-        }
-        @Test
-        void assistedPullUpShouldRejectWrongAssistanceOrder() {
-
-            // 1-2 reps: 20 kg assistance
-            PullUpRecord oneToTwoRecord = new PullUpRecord();
-            oneToTwoRecord.setExternalWeight(20);
-            oneToTwoRecord.setReps(2);
-            oneToTwoRecord.setRir(1);
-
-            // 4-6 reps: 10 kg assistance
-            PullUpRecord fourToSixRecord = new PullUpRecord();
-            fourToSixRecord.setExternalWeight(10);
-            fourToSixRecord.setReps(5);
-            fourToSixRecord.setRir(1);
-
-            PullUpModeStrength assisted = new PullUpModeStrength();
-
-            assisted.setOneToTwo(oneToTwoRecord);
-            assisted.setFourToSix(fourToSixRecord);
-
-            PullUpStrength pullUpStrength = new PullUpStrength();
-
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> pullUpStrength.setAssisted(assisted)
-            );
-        }
-        @Test
-        void weightedPullUpShouldRejectZeroExternalWeight() {
-
-            PullUpRecord record = new PullUpRecord();
-            record.setExternalWeight(0);
-            record.setReps(5);
-            record.setRir(1);
-
-            PullUpModeStrength weighted = new PullUpModeStrength();
-            weighted.setFourToSix(record);
-
-            PullUpStrength pullUpStrength = new PullUpStrength();
-
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> pullUpStrength.setWeighted(weighted)
-            );
-        }
-        @Test
-        void assistedPullUpShouldRejectZeroExternalWeight() {
-
-            PullUpRecord record = new PullUpRecord();
-            record.setExternalWeight(0);
-            record.setReps(5);
-            record.setRir(1);
-
-            PullUpModeStrength assisted = new PullUpModeStrength();
-            assisted.setFourToSix(record);
-
-            PullUpStrength pullUpStrength = new PullUpStrength();
-
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> pullUpStrength.setAssisted(assisted)
-            );
-        }
+        assertEquals(1, strength.getRecords().size());
+        assertSame(record, strength.getRecords().get(0));
     }
+
+
+    @Test
+    void shouldAcceptDifferentPullUpModes() {
+
+        PullUpRecord bodyweight =
+                new PullUpRecord(
+                        PullUpMode.BODYWEIGHT,
+                        0.0,
+                        12,
+                        1
+                );
+
+        PullUpRecord weighted =
+                new PullUpRecord(
+                        PullUpMode.WEIGHTED,
+                        20.0,
+                        5,
+                        1
+                );
+
+        PullUpRecord assisted =
+                new PullUpRecord(
+                        PullUpMode.ASSISTED,
+                        25.0,
+                        8,
+                        2
+                );
+
+        PullUpStrength strength =
+                new PullUpStrength(
+                        List.of(
+                                bodyweight,
+                                weighted,
+                                assisted
+                        )
+                );
+
+        assertEquals(3, strength.getRecords().size());
+
+        assertEquals(
+                PullUpMode.BODYWEIGHT,
+                strength.getRecords().get(0).getMode()
+        );
+
+        assertEquals(
+                PullUpMode.WEIGHTED,
+                strength.getRecords().get(1).getMode()
+        );
+
+        assertEquals(
+                PullUpMode.ASSISTED,
+                strength.getRecords().get(2).getMode()
+        );
+    }
+
+
+    // ==================== No Strength Evaluation ====================
+
+    @Test
+    void shouldAcceptDifferentRepRanges() {
+
+        PullUpRecord record1 =
+                new PullUpRecord(
+                        PullUpMode.WEIGHTED,
+                        25.0,
+                        3,
+                        1
+                );
+
+        PullUpRecord record2 =
+                new PullUpRecord(
+                        PullUpMode.WEIGHTED,
+                        15.0,
+                        7,
+                        2
+                );
+
+        PullUpRecord record3 =
+                new PullUpRecord(
+                        PullUpMode.BODYWEIGHT,
+                        0.0,
+                        15,
+                        3
+                );
+
+        PullUpStrength strength =
+                new PullUpStrength(
+                        List.of(
+                                record1,
+                                record2,
+                                record3
+                        )
+                );
+
+        assertEquals(3, strength.getRecords().size());
+    }
+
+
+    // ==================== Records Validation ====================
+
+    @Test
+    void shouldRejectNullRecordsList() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new PullUpStrength(null)
+        );
+    }
+
+
+    @Test
+    void shouldRejectEmptyRecordsList() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new PullUpStrength(List.of())
+        );
+    }
+
+
+    @Test
+    void shouldRejectNullRecord() {
+
+        List<PullUpRecord> records =
+                new ArrayList<>();
+
+        records.add(
+                new PullUpRecord(
+                        PullUpMode.BODYWEIGHT,
+                        0.0,
+                        10,
+                        1
+                )
+        );
+
+        records.add(null);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new PullUpStrength(records)
+        );
+    }
+
+
+    // ==================== Defensive Copy ====================
+
+    @Test
+    void shouldProtectRecordsFromExternalModification() {
+
+        PullUpRecord record =
+                new PullUpRecord(
+                        PullUpMode.WEIGHTED,
+                        20.0,
+                        5,
+                        1
+                );
+
+        List<PullUpRecord> originalRecords =
+                new ArrayList<>();
+
+        originalRecords.add(record);
+
+        PullUpStrength strength =
+                new PullUpStrength(originalRecords);
+
+        originalRecords.clear();
+
+        assertEquals(1, strength.getRecords().size());
+    }
+
+
+    @Test
+    void returnedRecordsShouldNotBeModifiable() {
+
+        PullUpRecord record =
+                new PullUpRecord(
+                        PullUpMode.BODYWEIGHT,
+                        0.0,
+                        10,
+                        1
+                );
+
+        PullUpStrength strength =
+                new PullUpStrength(
+                        List.of(record)
+                );
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> strength.getRecords().clear()
+        );
+    }
+}
