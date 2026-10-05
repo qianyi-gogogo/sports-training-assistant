@@ -102,18 +102,31 @@ public class TrainingDayPlanTest {
 
 
     @Test
-    void restDayShouldRejectExercises() {
+    void restDayShouldAllowExercises() {
 
         ExercisePlan exercise =
                 createExercisePlan();
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new TrainingDayPlan(
+        TrainingDayPlan day =
+                new TrainingDayPlan(
                         "Rest Day",
                         DayType.REST,
                         List.of(exercise)
-                )
+                );
+
+        assertEquals(
+                DayType.REST,
+                day.getDayType()
+        );
+
+        assertEquals(
+                1,
+                day.getExercises().size()
+        );
+
+        assertSame(
+                exercise,
+                day.getExercises().get(0)
         );
     }
 
@@ -153,6 +166,11 @@ public class TrainingDayPlanTest {
                         DayType.ACTIVE_RECOVERY,
                         List.of(exercise)
                 );
+
+        assertEquals(
+                DayType.ACTIVE_RECOVERY,
+                day.getDayType()
+        );
 
         assertEquals(
                 1,
@@ -250,7 +268,10 @@ public class TrainingDayPlanTest {
         List<ExercisePlan> exercises =
                 new ArrayList<>();
 
-        exercises.add(createExercisePlan());
+        exercises.add(
+                createExercisePlan()
+        );
+
         exercises.add(null);
 
         assertThrows(

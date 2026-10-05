@@ -286,6 +286,21 @@ public class PullUpRecordTest {
     // ==================== RIR ====================
 
     @Test
+    void shouldAcceptNullRir() {
+
+        PullUpRecord record =
+                new PullUpRecord(
+                        PullUpMode.BODYWEIGHT,
+                        0.0,
+                        10,
+                        null
+                );
+
+        assertNull(record.getRir());
+    }
+
+
+    @Test
     void shouldAcceptRirBoundaryValues() {
 
         PullUpRecord zeroRir =

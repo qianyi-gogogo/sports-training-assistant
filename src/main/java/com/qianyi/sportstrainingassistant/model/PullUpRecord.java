@@ -5,14 +5,14 @@ public class PullUpRecord {
     private final PullUpMode mode;
     private final double weightKg;
     private final int reps;
-    private final int rir;
+    private final Integer rir;
 
 
     public PullUpRecord(
             PullUpMode mode,
             double weightKg,
             int reps,
-            int rir) {
+            Integer rir) {
 
         validateMode(mode);
         validateWeight(mode, weightKg);
@@ -38,7 +38,7 @@ public class PullUpRecord {
         return reps;
     }
 
-    public int getRir() {
+    public Integer getRir() {
         return rir;
     }
 
@@ -101,9 +101,9 @@ public class PullUpRecord {
 
     // ==================== RIR Validation ====================
 
-    private void validateRir(int rir) {
+    private void validateRir(Integer rir) {
 
-        if (rir < 0 || rir > 5) {
+        if (rir != null && (rir < 0 || rir > 5)) {
             throw new IllegalArgumentException(
                     "RIR must be between 0 and 5"
             );

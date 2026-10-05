@@ -34,12 +34,6 @@ public class TrainingDayPlan {
             }
         }
 
-        if (dayType == DayType.REST && !exercises.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Rest day cannot contain exercises"
-            );
-        }
-
         if (dayType == DayType.TRAINING && exercises.isEmpty()) {
             throw new IllegalArgumentException(
                     "Training day must contain at least one exercise"
