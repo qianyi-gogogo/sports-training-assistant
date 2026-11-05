@@ -4,7 +4,9 @@ public class BodyMeasurements {
 
     private Double chestCircumferenceCm;
     private Double waistCircumferenceCm;
-    private Double armCircumferenceCm;
+    // Arm circumference: flexed and unpumped.
+    private Double leftArmCircumferenceCm;
+    private Double rightArmCircumferenceCm;
     private Double thighCircumferenceCm;
 
 
@@ -52,26 +54,52 @@ public class BodyMeasurements {
     }
 
 
-    // ==================== Arm ====================
 
-    public Double getArmCircumferenceCm() {
-        return armCircumferenceCm;
+    // ==================== Left Arm ====================
+    // Measured flexed, without a workout pump.
+
+    public Double getLeftArmCircumferenceCm() {
+        return leftArmCircumferenceCm;
     }
 
-    public void setArmCircumferenceCm(Double armCircumferenceCm) {
+    public void setLeftArmCircumferenceCm(Double leftArmCircumferenceCm) {
 
-        if (armCircumferenceCm != null
-                && (!Double.isFinite(armCircumferenceCm)
-                || armCircumferenceCm < 10
-                || armCircumferenceCm > 80)) {
+        if (leftArmCircumferenceCm != null
+                && (!Double.isFinite(leftArmCircumferenceCm)
+                || leftArmCircumferenceCm < 10
+                || leftArmCircumferenceCm > 80)) {
 
             throw new IllegalArgumentException(
-                    "Arm circumference must be between 10 and 80 cm"
+                    "Left arm circumference must be between 10 and 80 cm"
             );
         }
 
-        this.armCircumferenceCm = armCircumferenceCm;
+        this.leftArmCircumferenceCm = leftArmCircumferenceCm;
     }
+
+
+    // ==================== Right Arm ====================
+    // Measured flexed, without a workout pump.
+
+    public Double getRightArmCircumferenceCm() {
+        return rightArmCircumferenceCm;
+    }
+
+    public void setRightArmCircumferenceCm(Double rightArmCircumferenceCm) {
+
+        if (rightArmCircumferenceCm != null
+                && (!Double.isFinite(rightArmCircumferenceCm)
+                || rightArmCircumferenceCm < 10
+                || rightArmCircumferenceCm > 80)) {
+
+            throw new IllegalArgumentException(
+                    "Right arm circumference must be between 10 and 80 cm"
+            );
+        }
+
+        this.rightArmCircumferenceCm = rightArmCircumferenceCm;
+    }
+
 
 
     // ==================== Thigh ====================

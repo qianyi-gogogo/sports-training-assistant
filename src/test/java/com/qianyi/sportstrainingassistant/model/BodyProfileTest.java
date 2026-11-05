@@ -243,7 +243,8 @@ public class BodyProfileTest {
 
         measurements.setChestCircumferenceCm(100.0);
         measurements.setWaistCircumferenceCm(80.0);
-        measurements.setArmCircumferenceCm(35.0);
+        measurements.setLeftArmCircumferenceCm(34.5);
+        measurements.setRightArmCircumferenceCm(35.0);
         measurements.setThighCircumferenceCm(60.0);
 
         StrengthRecord benchRecord =

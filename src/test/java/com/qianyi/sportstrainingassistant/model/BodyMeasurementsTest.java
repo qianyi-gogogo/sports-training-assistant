@@ -149,72 +149,37 @@ public class BodyMeasurementsTest {
 
     // ==================== Arm ====================
 
-    @Test
-    void armShouldAcceptValidValue() {
 
+    @Test
+    void shouldStoreLeftAndRightArmSeparately() {
         BodyMeasurements measurements = new BodyMeasurements();
 
-        measurements.setArmCircumferenceCm(35.0);
+        measurements.setLeftArmCircumferenceCm(34.5);
+        measurements.setRightArmCircumferenceCm(35.0);
 
-        assertEquals(
-                35.0,
-                measurements.getArmCircumferenceCm(),
-                0.001
-        );
+        assertEquals(34.5, measurements.getLeftArmCircumferenceCm());
+        assertEquals(35.0, measurements.getRightArmCircumferenceCm());
     }
 
     @Test
-    void armShouldAcceptBoundaryValues() {
-
+    void shouldRejectInvalidArmCircumference() {
         BodyMeasurements measurements = new BodyMeasurements();
 
-        measurements.setArmCircumferenceCm(10.0);
-        assertEquals(
-                10.0,
-                measurements.getArmCircumferenceCm(),
-                0.001
-        );
+        assertThrows(IllegalArgumentException.class,
+                () -> measurements.setLeftArmCircumferenceCm(85.0));
 
-        measurements.setArmCircumferenceCm(80.0);
-        assertEquals(
-                80.0,
-                measurements.getArmCircumferenceCm(),
-                0.001
-        );
+        assertThrows(IllegalArgumentException.class,
+                () -> measurements.setRightArmCircumferenceCm(5.0));
     }
 
     @Test
-    void armShouldRejectValueBelowMinimum() {
-
+    void shouldAllowMissingArmMeasurements() {
         BodyMeasurements measurements = new BodyMeasurements();
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> measurements.setArmCircumferenceCm(9.9)
-        );
+        assertNull(measurements.getLeftArmCircumferenceCm());
+        assertNull(measurements.getRightArmCircumferenceCm());
     }
 
-    @Test
-    void armShouldRejectValueAboveMaximum() {
-
-        BodyMeasurements measurements = new BodyMeasurements();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> measurements.setArmCircumferenceCm(80.1)
-        );
-    }
-
-    @Test
-    void armShouldRejectNaN() {
-
-        BodyMeasurements measurements = new BodyMeasurements();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> measurements.setArmCircumferenceCm(Double.NaN)
-        );
-    }
 
 
     // ==================== Thigh ====================
@@ -287,6 +252,7 @@ public class BodyMeasurementsTest {
     }
 
 
+
     // ==================== Optional Values ====================
 
     @Test
@@ -303,7 +269,11 @@ public class BodyMeasurementsTest {
         );
 
         assertDoesNotThrow(
-                () -> measurements.setArmCircumferenceCm(null)
+                () -> measurements.setLeftArmCircumferenceCm(null)
+        );
+
+        assertDoesNotThrow(
+                () -> measurements.setRightArmCircumferenceCm(null)
         );
 
         assertDoesNotThrow(
@@ -312,7 +282,9 @@ public class BodyMeasurementsTest {
 
         assertNull(measurements.getChestCircumferenceCm());
         assertNull(measurements.getWaistCircumferenceCm());
-        assertNull(measurements.getArmCircumferenceCm());
+        assertNull(measurements.getLeftArmCircumferenceCm());
+        assertNull(measurements.getRightArmCircumferenceCm());
         assertNull(measurements.getThighCircumferenceCm());
     }
+
 }
