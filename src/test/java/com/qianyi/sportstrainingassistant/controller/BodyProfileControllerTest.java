@@ -4,7 +4,7 @@ package com.qianyi.sportstrainingassistant.controller;
 import com.qianyi.sportstrainingassistant.exception.GlobalExceptionHandler;
 import com.qianyi.sportstrainingassistant.model.*;
 import com.qianyi.sportstrainingassistant.service.BodyProfileService;
-
+import com.qianyi.sportstrainingassistant.dto.request.profile.BodyProfilePatchRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -21,6 +21,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.qianyi.sportstrainingassistant.dto.response.profile.BodyProfileHistoryResponse;
+import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 
 @WebMvcTest(BodyProfileController.class)
 @Import(GlobalExceptionHandler.class)
@@ -305,4 +308,166 @@ class BodyProfileControllerTest {
                 )
         );
     }
+
+    // ==================== PATCH: Success ====================
+
+    @Test
+    void shouldPatchBodyProfile() throws Exception {
+
+        BodyProfile updated = createProfile();
+
+        updated.getBasicBodyInfo().setWeightKg(72.0);
+
+        when(service.patchProfile(
+                eq(1L),
+                any(BodyProfilePatchRequest.class)
+        )).thenReturn(updated);
+
+        mockMvc.perform(
+                        patch("/api/users/1/profile")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                {
+                                  "weightKg": 72.0
+                                }
+                                """)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.basicBodyInfo.weightKg")
+                        .value(72.0));
+
+        verify(service).patchProfile(
+                eq(1L),
+                argThat(request ->
+                        Double.valueOf(72.0)
+                                .equals(request.getWeightKg())
+                                && request.getWaistCircumferenceCm() == null
+                )
+        );
+    }
+
+
+    // ==================== PATCH: Invalid Weight ====================
+
+    @Test
+    void shouldRejectInvalidPatchWeight() throws Exception {
+
+        mockMvc.perform(
+                        patch("/api/users/1/profile")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                {
+                                  "weightKg": 500.0
+                                }
+                                """)
+                )
+                .andExpect(status().isBadRequest());
+
+        verify(service, never())
+                .patchProfile(anyLong(), any());
+    }
+
+
+    // ==================== PATCH: Empty Request ====================
+
+    @Test
+    void shouldRejectEmptyPatchRequest() throws Exception {
+
+        mockMvc.perform(
+                        patch("/api/users/1/profile")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{}")
+                )
+                .andExpect(status().isBadRequest());
+
+        verify(service, never())
+                .patchProfile(anyLong(), any());
+    }
+
+    // ==================== History: Read ====================
+
+    @Test
+    void shouldGetProfileHistory() throws Exception {
+
+        List<BodyProfileHistoryResponse> history =
+                List.of(
+                        new BodyProfileHistoryResponse(
+                                1L,
+                                70.0,
+                                78.0,
+                                LocalDateTime.of(
+                                        2026, 11, 1, 9, 0
+                                )
+                        ),
+                        new BodyProfileHistoryResponse(
+                                2L,
+                                72.0,
+                                79.0,
+                                LocalDateTime.of(
+                                        2026, 11, 16, 9, 0
+                                )
+                        )
+                );
+
+        when(service.getProfileHistory(1L))
+                .thenReturn(history);
+
+        mockMvc.perform(
+                        get("/api/users/1/profile/history")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].weightKg")
+                        .value(70.0))
+                .andExpect(jsonPath("$[1].weightKg")
+                        .value(72.0))
+                .andExpect(jsonPath("$[1].waistCircumferenceCm")
+                        .value(79.0))
+                .andExpect(jsonPath("$[1].recordedAt")
+                        .value("2026-11-16T09:00:00"));
+
+        verify(service).getProfileHistory(1L);
+    }
+
+
+    // ==================== History: Empty ====================
+
+    @Test
+    void shouldReturnEmptyHistory() throws Exception {
+
+        when(service.getProfileHistory(1L))
+                .thenReturn(List.of());
+
+        mockMvc.perform(
+                        get("/api/users/1/profile/history")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        verify(service).getProfileHistory(1L);
+    }
+
+
+    // ==================== History: Not Found ====================
+
+    @Test
+    void shouldReturnNotFoundForMissingHistoryProfile()
+            throws Exception {
+
+        when(service.getProfileHistory(99L))
+                .thenThrow(new NoSuchElementException(
+                        "Body profile not found"
+                ));
+
+        mockMvc.perform(
+                        get("/api/users/99/profile/history")
+                )
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error")
+                        .value("Body profile not found"));
+
+        verify(service).getProfileHistory(99L);
+    }
+
+
 }

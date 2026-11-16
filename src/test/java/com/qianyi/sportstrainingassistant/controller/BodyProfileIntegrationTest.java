@@ -163,4 +163,170 @@ class BodyProfileIntegrationTest {
                 )
                 .andExpect(status().isNotFound());
     }
+
+    // ==================== PATCH Integration ====================
+
+    @Test
+    void shouldPatchWeightAndPreserveOtherData()
+            throws Exception {
+
+        Long userId = createUserId();
+        String url = "/api/users/" + userId + "/profile";
+
+        // 1. Create a complete body profile.
+        mockMvc.perform(
+                        post(url)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(validJson())
+                )
+                .andExpect(status().isCreated());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // 2. Update weight only.
+        mockMvc.perform(
+                        patch(url)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                {
+                                  "weightKg": 72.0
+                                }
+                                """)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.basicBodyInfo.weightKg")
+                        .value(72.0));
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // 3. Read the profile again.
+        mockMvc.perform(
+                        get(url + "/current")
+                )
+                .andExpect(status().isOk())
+
+                // Updated weight.
+                .andExpect(jsonPath("$.basicBodyInfo.weightKg")
+                        .value(72.0))
+
+                // Unchanged basic information.
+                .andExpect(jsonPath("$.basicBodyInfo.heightCm")
+                        .value(175.0))
+                .andExpect(jsonPath("$.basicBodyInfo.age")
+                        .value(21))
+                .andExpect(jsonPath("$.basicBodyInfo.bodyFatPercentage")
+                        .value(15.0))
+
+                // Unchanged body measurements.
+                .andExpect(jsonPath(
+                        "$.bodyMeasurements.waistCircumferenceCm"
+                ).value(78.0))
+                .andExpect(jsonPath(
+                        "$.bodyMeasurements.leftArmCircumferenceCm"
+                ).value(35.0))
+
+                // Unchanged strength records.
+                .andExpect(jsonPath(
+                        "$.strengthProfile.benchPress.records[0].weightKg"
+                ).value(70.0))
+                .andExpect(jsonPath(
+                        "$.strengthProfile.benchPress.records[1].reps"
+                ).value(10))
+                .andExpect(jsonPath(
+                        "$.strengthProfile.pullUp.records[0].reps"
+                ).value(12));
+    }
+
+
+    // ==================== Invalid PATCH ====================
+
+    @Test
+    void shouldRejectInvalidPatchAndPreserveData()
+            throws Exception {
+
+        Long userId = createUserId();
+        String url = "/api/users/" + userId + "/profile";
+
+        // 1. Create a valid profile.
+        mockMvc.perform(
+                        post(url)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(validJson())
+                )
+                .andExpect(status().isCreated());
+
+        // 2. Try to set an invalid weight.
+        mockMvc.perform(
+                        patch(url)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                {
+                                  "weightKg": 500.0
+                                }
+                                """)
+                )
+                .andExpect(status().isBadRequest());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // 3. Confirm the original weight remains.
+        mockMvc.perform(
+                        get(url + "/current")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.basicBodyInfo.weightKg")
+                        .value(70.0));
+    }
+
+    // ==================== History Integration ====================
+
+    @Test
+    void shouldCreatePatchAndReadHistory()
+            throws Exception {
+
+        Long userId = createUserId();
+        String url = "/api/users/" + userId + "/profile";
+
+        // 1. Create the initial profile.
+        mockMvc.perform(
+                        post(url)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(validJson())
+                )
+                .andExpect(status().isCreated());
+
+        // 2. Update body weight.
+        mockMvc.perform(
+                        patch(url)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                {
+                                  "weightKg": 72.0
+                                }
+                                """)
+                )
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // 3. Verify historical snapshots.
+        mockMvc.perform(
+                        get(url + "/history")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].weightKg")
+                        .value(70.0))
+                .andExpect(jsonPath("$[1].weightKg")
+                        .value(72.0))
+                .andExpect(jsonPath("$[0].waistCircumferenceCm")
+                        .value(78.0))
+                .andExpect(jsonPath("$[1].waistCircumferenceCm")
+                        .value(78.0));
+    }
+
 }

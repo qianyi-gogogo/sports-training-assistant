@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.qianyi.sportstrainingassistant.dto.request.profile.BodyProfilePatchRequest;
 
 @SpringBootTest
 @Transactional
@@ -238,5 +239,172 @@ class BodyProfileServiceTest {
                 restored.getBasicBodyInfo().getHeightCm()
         );
     }
+
+    // ==================== PATCH: Weight ====================
+
+    @Test
+    void shouldPatchWeightOnly() {
+
+        Long userId = createUserId();
+        service.createProfile(userId, createProfile());
+
+        BodyProfilePatchRequest request =
+                new BodyProfilePatchRequest();
+
+        request.setWeightKg(72.0);
+
+        BodyProfile updated =
+                service.patchProfile(userId, request);
+
+        assertEquals(
+                72.0,
+                updated.getBasicBodyInfo().getWeightKg()
+        );
+
+        assertEquals(
+                175.0,
+                updated.getBasicBodyInfo().getHeightCm()
+        );
+
+        assertEquals(
+                78.0,
+                updated.getBodyMeasurements()
+                        .getWaistCircumferenceCm()
+        );
+
+        entityManager.flush();
+        entityManager.clear();
+
+        BodyProfile restored = service
+                .getCurrentProfile(userId)
+                .orElseThrow();
+
+        assertEquals(
+                72.0,
+                restored.getBasicBodyInfo().getWeightKg()
+        );
+    }
+
+
+    // ==================== PATCH: Waist ====================
+
+    @Test
+    void shouldPatchWaistOnly() {
+
+        Long userId = createUserId();
+        service.createProfile(userId, createProfile());
+
+        BodyProfilePatchRequest request =
+                new BodyProfilePatchRequest();
+
+        request.setWaistCircumferenceCm(80.0);
+
+        BodyProfile updated =
+                service.patchProfile(userId, request);
+
+        assertEquals(
+                80.0,
+                updated.getBodyMeasurements()
+                        .getWaistCircumferenceCm()
+        );
+
+        assertEquals(
+                70.0,
+                updated.getBasicBodyInfo().getWeightKg()
+        );
+
+        entityManager.flush();
+        entityManager.clear();
+
+        BodyProfile restored = service
+                .getCurrentProfile(userId)
+                .orElseThrow();
+
+        assertEquals(
+                80.0,
+                restored.getBodyMeasurements()
+                        .getWaistCircumferenceCm()
+        );
+    }
+
+
+    // ==================== PATCH: Both ====================
+
+    @Test
+    void shouldPatchWeightAndWaistTogether() {
+
+        Long userId = createUserId();
+        service.createProfile(userId, createProfile());
+
+        BodyProfilePatchRequest request =
+                new BodyProfilePatchRequest();
+
+        request.setWeightKg(72.0);
+        request.setWaistCircumferenceCm(80.0);
+
+        BodyProfile updated =
+                service.patchProfile(userId, request);
+
+        assertEquals(
+                72.0,
+                updated.getBasicBodyInfo().getWeightKg()
+        );
+
+        assertEquals(
+                80.0,
+                updated.getBodyMeasurements()
+                        .getWaistCircumferenceCm()
+        );
+    }
+
+
+    // ==================== PATCH: Invalid Data ====================
+
+    @Test
+    void shouldRejectInvalidPatchWeight() {
+
+        Long userId = createUserId();
+        service.createProfile(userId, createProfile());
+
+        BodyProfilePatchRequest request =
+                new BodyProfilePatchRequest();
+
+        request.setWeightKg(500.0);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.patchProfile(userId, request)
+        );
+
+        entityManager.clear();
+
+        BodyProfile restored = service
+                .getCurrentProfile(userId)
+                .orElseThrow();
+
+        assertEquals(
+                70.0,
+                restored.getBasicBodyInfo().getWeightKg()
+        );
+    }
+
+
+    // ==================== PATCH: Empty Request ====================
+
+    @Test
+    void shouldRejectEmptyPatchRequest() {
+
+        Long userId = createUserId();
+        service.createProfile(userId, createProfile());
+
+        BodyProfilePatchRequest request =
+                new BodyProfilePatchRequest();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.patchProfile(userId, request)
+        );
+    }
+
 
 }
