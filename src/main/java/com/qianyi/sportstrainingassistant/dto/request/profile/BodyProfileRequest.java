@@ -1,3 +1,4 @@
+
 package com.qianyi.sportstrainingassistant.dto.request.profile;
 
 import jakarta.validation.Valid;
@@ -16,30 +17,41 @@ public class BodyProfileRequest {
     private StrengthProfileRequest strengthProfile;
 
 
+    // ==================== Basic Body Info ====================
+
     public BasicBodyInfoRequest getBasicBodyInfo() {
         return basicBodyInfo;
     }
 
     public void setBasicBodyInfo(
-            BasicBodyInfoRequest basicBodyInfo) {
+            BasicBodyInfoRequest basicBodyInfo
+    ) {
         this.basicBodyInfo = basicBodyInfo;
     }
+
+
+    // ==================== Body Measurements ====================
 
     public BodyMeasurementsRequest getBodyMeasurements() {
         return bodyMeasurements;
     }
 
     public void setBodyMeasurements(
-            BodyMeasurementsRequest bodyMeasurements) {
+            BodyMeasurementsRequest bodyMeasurements
+    ) {
         this.bodyMeasurements = bodyMeasurements;
     }
+
+
+    // ==================== Strength Profile ====================
 
     public StrengthProfileRequest getStrengthProfile() {
         return strengthProfile;
     }
 
     public void setStrengthProfile(
-            StrengthProfileRequest strengthProfile) {
+            StrengthProfileRequest strengthProfile
+    ) {
         this.strengthProfile = strengthProfile;
     }
 }

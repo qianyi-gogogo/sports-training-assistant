@@ -152,4 +152,91 @@ class BodyProfileServiceTest {
 
         assertTrue(result.isEmpty());
     }
+
+    // ==================== Strength Integration ====================
+
+    @Test
+    void shouldCreateProfileWithStrengthRecords() {
+
+        Long userId = createUserId();
+
+        BodyProfile profile = createProfile();
+
+        StrengthProfile strength = new StrengthProfile();
+
+        strength.setBenchPress(new ExerciseStrength(
+                java.util.List.of(
+                        new StrengthRecord(70.0, 5, 1),
+                        new StrengthRecord(65.0, 8, 2)
+                )
+        ));
+
+        profile.setStrengthProfile(strength);
+
+        BodyProfile created =
+                service.createProfile(userId, profile);
+
+        assertNotNull(created.getStrengthProfile());
+
+        assertEquals(
+                2,
+                created.getStrengthProfile()
+                        .getBenchPress()
+                        .getRecords()
+                        .size()
+        );
+
+        entityManager.flush();
+        entityManager.clear();
+
+        BodyProfile restored = service
+                .getCurrentProfile(userId)
+                .orElseThrow();
+
+        assertNotNull(restored.getStrengthProfile());
+
+        assertEquals(
+                70.0,
+                restored.getStrengthProfile()
+                        .getBenchPress()
+                        .getRecords()
+                        .get(0)
+                        .getWeightKg()
+        );
+
+        assertEquals(
+                65.0,
+                restored.getStrengthProfile()
+                        .getBenchPress()
+                        .getRecords()
+                        .get(1)
+                        .getWeightKg()
+        );
+    }
+
+
+    @Test
+    void shouldAllowProfileWithoutStrengthRecords() {
+
+        Long userId = createUserId();
+
+        BodyProfile profile = createProfile();
+
+        service.createProfile(userId, profile);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        BodyProfile restored = service
+                .getCurrentProfile(userId)
+                .orElseThrow();
+
+        assertNull(restored.getStrengthProfile());
+
+        assertEquals(
+                175.0,
+                restored.getBasicBodyInfo().getHeightCm()
+        );
+    }
+
 }

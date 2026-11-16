@@ -166,28 +166,32 @@ public class BodyMeasurementsRequestTest {
 
     // ==================== Arm ====================
 
+
+    // ==================== Left & Right Arm ====================
+
     @Test
     void shouldAcceptArmBoundaryValues() {
 
         BodyMeasurementsRequest minRequest =
                 createValidRequest();
-        minRequest.setArmCircumferenceCm(10.0);
+
+        minRequest.setLeftArmCircumferenceCm(10.0);
 
         BodyMeasurementsRequest maxRequest =
                 createValidRequest();
-        maxRequest.setArmCircumferenceCm(80.0);
+
+        maxRequest.setRightArmCircumferenceCm(80.0);
 
         assertNoViolationFor(
                 minRequest,
-                "armCircumferenceCm"
+                "leftArmCircumferenceCm"
         );
 
         assertNoViolationFor(
                 maxRequest,
-                "armCircumferenceCm"
+                "rightArmCircumferenceCm"
         );
     }
-
 
     @Test
     void shouldRejectArmBelowMinimum() {
@@ -195,14 +199,13 @@ public class BodyMeasurementsRequestTest {
         BodyMeasurementsRequest request =
                 createValidRequest();
 
-        request.setArmCircumferenceCm(9.9);
+        request.setLeftArmCircumferenceCm(9.9);
 
         assertHasViolationFor(
                 request,
-                "armCircumferenceCm"
+                "leftArmCircumferenceCm"
         );
     }
-
 
     @Test
     void shouldRejectArmAboveMaximum() {
@@ -210,13 +213,14 @@ public class BodyMeasurementsRequestTest {
         BodyMeasurementsRequest request =
                 createValidRequest();
 
-        request.setArmCircumferenceCm(80.1);
+        request.setRightArmCircumferenceCm(80.1);
 
         assertHasViolationFor(
                 request,
-                "armCircumferenceCm"
+                "rightArmCircumferenceCm"
         );
     }
+
 
 
     // ==================== Thigh ====================
@@ -283,7 +287,8 @@ public class BodyMeasurementsRequestTest {
 
         request.setChestCircumferenceCm(100.0);
         request.setWaistCircumferenceCm(80.0);
-        request.setArmCircumferenceCm(35.0);
+        request.setLeftArmCircumferenceCm(35.0);
+        request.setRightArmCircumferenceCm(34.5);
         request.setThighCircumferenceCm(55.0);
 
         return request;

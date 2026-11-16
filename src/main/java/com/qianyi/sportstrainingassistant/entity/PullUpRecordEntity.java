@@ -27,7 +27,7 @@ public class PullUpRecordEntity {
     @Column(name = "reps", nullable = false)
     private Integer reps;
 
-    @Column(name = "rir", nullable = false)
+    @Column(name = "rir")
     private Integer rir;
 
     @Column(name = "record_index", nullable = false)

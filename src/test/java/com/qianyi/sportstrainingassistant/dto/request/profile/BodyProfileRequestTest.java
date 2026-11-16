@@ -124,7 +124,7 @@ public class BodyProfileRequestTest {
         BodyMeasurementsRequest measurements =
                 new BodyMeasurementsRequest();
 
-        measurements.setArmCircumferenceCm(5.0);
+        measurements.setLeftArmCircumferenceCm(5.0);
 
         BodyProfileRequest request =
                 new BodyProfileRequest();
