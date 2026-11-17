@@ -8,7 +8,12 @@ import java.time.LocalDateTime;
 public record BodyProfileHistoryResponse(
         Long id,
         double weightKg,
+        Double bodyFatPercentage,
+        Double chestCircumferenceCm,
         Double waistCircumferenceCm,
+        Double leftArmCircumferenceCm,
+        Double rightArmCircumferenceCm,
+        Double thighCircumferenceCm,
         LocalDateTime recordedAt
 ) {
 
@@ -27,7 +32,12 @@ public record BodyProfileHistoryResponse(
         return new BodyProfileHistoryResponse(
                 entity.getId(),
                 entity.getWeightKg(),
+                entity.getBodyFatPercentage(),
+                entity.getChestCircumferenceCm(),
                 entity.getWaistCircumferenceCm(),
+                entity.getLeftArmCircumferenceCm(),
+                entity.getRightArmCircumferenceCm(),
+                entity.getThighCircumferenceCm(),
                 entity.getRecordedAt()
         );
     }

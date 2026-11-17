@@ -406,5 +406,186 @@ class BodyProfileServiceTest {
         );
     }
 
+    // ==================== PATCH: All Measurements ====================
+
+    @Test
+    void shouldPatchAllBodyMeasurements() {
+
+        Long userId = createUserId();
+
+        service.createProfile(userId, createProfile());
+
+        BodyProfilePatchRequest request =
+                new BodyProfilePatchRequest();
+
+        request.setWeightKg(72.0);
+        request.setBodyFatPercentage(14.5);
+        request.setChestCircumferenceCm(102.0);
+        request.setWaistCircumferenceCm(80.0);
+        request.setLeftArmCircumferenceCm(36.0);
+        request.setRightArmCircumferenceCm(35.5);
+        request.setThighCircumferenceCm(57.0);
+
+        service.patchProfile(userId, request);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        BodyProfile restored = service
+                .getCurrentProfile(userId)
+                .orElseThrow();
+
+        assertEquals(
+                72.0,
+                restored.getBasicBodyInfo().getWeightKg()
+        );
+
+        assertEquals(
+                14.5,
+                restored.getBasicBodyInfo()
+                        .getBodyFatPercentage()
+        );
+
+        BodyMeasurements measurements =
+                restored.getBodyMeasurements();
+
+        assertEquals(
+                102.0,
+                measurements.getChestCircumferenceCm()
+        );
+
+        assertEquals(
+                80.0,
+                measurements.getWaistCircumferenceCm()
+        );
+
+        assertEquals(
+                36.0,
+                measurements.getLeftArmCircumferenceCm()
+        );
+
+        assertEquals(
+                35.5,
+                measurements.getRightArmCircumferenceCm()
+        );
+
+        assertEquals(
+                57.0,
+                measurements.getThighCircumferenceCm()
+        );
+
+        // Unmodified basic fields remain unchanged.
+        assertEquals(
+                175.0,
+                restored.getBasicBodyInfo().getHeightCm()
+        );
+
+        assertEquals(
+                21,
+                restored.getBasicBodyInfo().getAge()
+        );
+    }
+
+
+    // ==================== PATCH: Null Means No Change ====================
+
+    @Test
+    void shouldPreserveExistingValuesWhenPatchFieldsAreNull() {
+
+        Long userId = createUserId();
+
+        BodyProfile profile = createProfile();
+
+        profile.getBasicBodyInfo()
+                .setBodyFatPercentage(15.0);
+
+        service.createProfile(userId, profile);
+
+        BodyProfilePatchRequest request =
+                new BodyProfilePatchRequest();
+
+        request.setWeightKg(72.0);
+
+        // Explicit null means NO CHANGE.
+        request.setBodyFatPercentage(null);
+        request.setChestCircumferenceCm(null);
+        request.setWaistCircumferenceCm(null);
+
+        service.patchProfile(userId, request);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        BodyProfile restored = service
+                .getCurrentProfile(userId)
+                .orElseThrow();
+
+        assertEquals(
+                72.0,
+                restored.getBasicBodyInfo().getWeightKg()
+        );
+
+        assertEquals(
+                15.0,
+                restored.getBasicBodyInfo()
+                        .getBodyFatPercentage()
+        );
+
+        assertEquals(
+                100.0,
+                restored.getBodyMeasurements()
+                        .getChestCircumferenceCm()
+        );
+
+        assertEquals(
+                78.0,
+                restored.getBodyMeasurements()
+                        .getWaistCircumferenceCm()
+        );
+    }
+
+
+    // ==================== PATCH: Invalid Measurements ====================
+
+    @Test
+    void shouldRejectInvalidBodyMeasurementWithoutSaving() {
+
+        Long userId = createUserId();
+
+        service.createProfile(userId, createProfile());
+
+        BodyProfilePatchRequest request =
+                new BodyProfilePatchRequest();
+
+        // Valid change.
+        request.setWeightKg(72.0);
+
+        // Invalid chest circumference.
+        request.setChestCircumferenceCm(300.0);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.patchProfile(userId, request)
+        );
+
+        entityManager.clear();
+
+        BodyProfile restored = service
+                .getCurrentProfile(userId)
+                .orElseThrow();
+
+        // Even the valid weight change must not be saved.
+        assertEquals(
+                70.0,
+                restored.getBasicBodyInfo().getWeightKg()
+        );
+
+        assertEquals(
+                100.0,
+                restored.getBodyMeasurements()
+                        .getChestCircumferenceCm()
+        );
+    }
+
 
 }

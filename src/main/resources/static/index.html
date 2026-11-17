@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Sports Training Assistant</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+            color: #222;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            font-size: 19px;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 5px;
+        }
+
+        input, select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            margin-top: 16px;
+            margin-right: 8px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            background: #eef2f7;
+            padding: 14px;
+            border-radius: 8px;
+        }
+
+        #status {
+            font-weight: bold;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>Sports Training Assistant</h1>
+    <p>训练辅助系统 · 第一版网页</p>
+
+    <div class="card">
+        <h2>用户</h2>
+
+        <label for="userId">测试用户 ID</label>
+        <input id="userId" type="number"
+               min="1" step="1" value="1">
+    </div>
+
+    <div class="card">
+        <h2>创建身体档案</h2>
+
+        <label for="height">身高 (cm)</label>
+        <input id="height" type="number"
+               min="50" max="250" step="0.1"
+               value="175">
+
+        <label for="weight">体重 (kg)</label>
+        <input id="weight" type="number"
+               min="10" max="300" step="0.1"
+               value="70">
+
+        <label for="age">年龄</label>
+        <input id="age" type="number"
+               min="8" max="100" step="1"
+               value="21">
+
+        <label for="sex">生理性别</label>
+        <select id="sex">
+            <option value="MALE">男</option>
+            <option value="FEMALE">女</option>
+        </select>
+
+        <button onclick="createProfile()">
+            创建档案
+        </button>
+
+        <button onclick="loadProfile()">
+            读取档案
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>更新体重</h2>
+
+        <label for="newWeight">新体重 (kg)</label>
+        <input id="newWeight" type="number"
+               min="10" max="300" step="0.1"
+               value="72">
+
+        <button onclick="updateWeight()">
+            更新体重
+        </button>
+
+        <button onclick="loadHistory()">
+            查看历史
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>运行结果</h2>
+
+        <p id="status">等待操作...</p>
+
+        <pre id="result">尚未读取数据</pre>
+    </div>
+
+</div>
+
+<script>
+    function field(id) {
+        return document.getElementById(id);
+    }
+
+    function profileUrl() {
+        const userId = Number(field("userId").value);
+
+        if (!Number.isSafeInteger(userId) || userId <= 0) {
+            throw new Error("请输入有效的用户 ID");
+        }
+
+        return `/api/users/${userId}/profile`;
+    }
+
+    async function request(url, method = "GET", body = null) {
+        const options = { method };
+
+        if (body !== null) {
+            options.headers = {
+                "Content-Type": "application/json"
+            };
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(url, options);
+        const text = await response.text();
+
+        let data;
+
+        try {
+            data = text ? JSON.parse(text) : null;
+        } catch {
+            data = text;
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                data?.error || `HTTP ${response.status}`
+            );
+        }
+
+        return data;
+    }
+
+    async function execute(action) {
+        try {
+            field("status").textContent = "请求中...";
+
+            const data = await action();
+
+            field("status").textContent = "操作成功";
+            field("result").textContent =
+                JSON.stringify(data, null, 2);
+        } catch (error) {
+            field("status").textContent =
+                "操作失败：" + error.message;
+        }
+    }
+
+    function createProfile() {
+        execute(() => request(
+            profileUrl(),
+            "POST",
+            {
+                basicBodyInfo: {
+                    heightCm: Number(field("height").value),
+                    weightKg: Number(field("weight").value),
+                    age: Number(field("age").value),
+                    biologicalSex: field("sex").value
+                }
+            }
+        ));
+    }
+
+    function loadProfile() {
+        execute(() => request(
+            profileUrl() + "/current"
+        ));
+    }
+
+    function updateWeight() {
+        execute(() => request(
+            profileUrl(),
+            "PATCH",
+            {
+                weightKg: Number(field("newWeight").value)
+            }
+        ));
+    }
+
+    function loadHistory() {
+        execute(() => request(
+            profileUrl() + "/history"
+        ));
+    }
+</script>
+
+</body>
+</html>

@@ -5,6 +5,7 @@ import com.qianyi.sportstrainingassistant.dto.request.profile.BodyProfileRequest
 import com.qianyi.sportstrainingassistant.model.BodyProfile;
 import com.qianyi.sportstrainingassistant.service.BodyProfileRequestMapper;
 import com.qianyi.sportstrainingassistant.service.BodyProfileService;
+import com.qianyi.sportstrainingassistant.dto.request.profile.StrengthProfilePatchRequest;
 import com.qianyi.sportstrainingassistant.dto.request.profile.BodyProfilePatchRequest;
 import jakarta.validation.Valid;
 
@@ -69,6 +70,18 @@ public class BodyProfileController {
         return service.patchProfile(userId, request);
     }
 
+    // ==================== PATCH Strength Profile ====================
+
+    @PatchMapping("/strength")
+    public BodyProfile patchStrengthProfile(
+            @PathVariable Long userId,
+            @Valid @RequestBody StrengthProfilePatchRequest request
+    ) {
+        return service.patchStrengthProfile(
+                userId,
+                request
+        );
+    }
     // ==================== Get Profile History ====================
 
     @GetMapping("/history")

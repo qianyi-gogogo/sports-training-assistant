@@ -7,6 +7,9 @@ import com.qianyi.sportstrainingassistant.repository.BodyProfileRepository;
 import com.qianyi.sportstrainingassistant.entity.BodyProfileHistoryEntity;
 import com.qianyi.sportstrainingassistant.repository.BodyProfileHistoryRepository;
 import com.qianyi.sportstrainingassistant.dto.response.profile.BodyProfileHistoryResponse;
+import com.qianyi.sportstrainingassistant.dto.request.profile.StrengthProfilePatchRequest;
+import com.qianyi.sportstrainingassistant.entity.StrengthExerciseType;
+import com.qianyi.sportstrainingassistant.model.StrengthProfile;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
@@ -131,6 +134,7 @@ public class BodyProfileService {
         }
     }
 
+
     // ==================== Partial Update ====================
 
     @Transactional
@@ -140,15 +144,14 @@ public class BodyProfileService {
     ) {
         validateUserId(userId);
 
-        if (request == null
-                || (request.getWeightKg() == null
-                && request.getWaistCircumferenceCm() == null)) {
+        if (request == null || !request.isUpdateProvided()) {
             throw new IllegalArgumentException(
                     "At least one field must be provided"
             );
         }
 
-        // 1. Find the existing profile.
+        // ==================== Find Profile ====================
+
         BodyProfileEntity entity = bodyProfileRepository
                 .findByUserId(userId)
                 .orElseThrow(() ->
@@ -157,72 +160,147 @@ public class BodyProfileService {
                         )
                 );
 
-        // 2. Convert the entity into a Model.
         BodyProfile profile = entity.toModel();
 
-        double oldWeight =
-                profile.getBasicBodyInfo().getWeightKg();
+        // ==================== Original Values ====================
+
+        var basic = profile.getBasicBodyInfo();
+
+        BodyMeasurements measurements =
+                profile.getBodyMeasurements();
+
+        if (measurements == null) {
+            measurements = new BodyMeasurements();
+            profile.setBodyMeasurements(measurements);
+        }
+
+        double oldWeight = basic.getWeightKg();
+        Double oldBodyFat = basic.getBodyFatPercentage();
+
+        Double oldChest =
+                measurements.getChestCircumferenceCm();
 
         Double oldWaist =
-                profile.getBodyMeasurements() == null
-                        ? null
-                        : profile.getBodyMeasurements()
-                        .getWaistCircumferenceCm();
+                measurements.getWaistCircumferenceCm();
 
-        // 3. Update weight only when provided.
+        Double oldLeftArm =
+                measurements.getLeftArmCircumferenceCm();
+
+        Double oldRightArm =
+                measurements.getRightArmCircumferenceCm();
+
+        Double oldThigh =
+                measurements.getThighCircumferenceCm();
+
+        // ==================== Apply Updates ====================
+
+        // Weight
         if (request.getWeightKg() != null) {
-            profile.getBasicBodyInfo().setWeightKg(
-                    request.getWeightKg()
+            basic.setWeightKg(request.getWeightKg());
+        }
+
+        // Body Fat
+        if (request.getBodyFatPercentage() != null) {
+            basic.setBodyFatPercentage(
+                    request.getBodyFatPercentage()
             );
         }
 
-        // 4. Update waist only when provided.
+        // Chest
+        if (request.getChestCircumferenceCm() != null) {
+            measurements.setChestCircumferenceCm(
+                    request.getChestCircumferenceCm()
+            );
+        }
+
+        // Waist
         if (request.getWaistCircumferenceCm() != null) {
-
-            BodyMeasurements measurements =
-                    profile.getBodyMeasurements();
-
-            if (measurements == null) {
-                measurements = new BodyMeasurements();
-                profile.setBodyMeasurements(measurements);
-            }
-
             measurements.setWaistCircumferenceCm(
                     request.getWaistCircumferenceCm()
             );
         }
 
-        // ==================== Detect Actual Changes ====================
+        // Left Arm
+        if (request.getLeftArmCircumferenceCm() != null) {
+            measurements.setLeftArmCircumferenceCm(
+                    request.getLeftArmCircumferenceCm()
+            );
+        }
 
-        double newWeight =
-                profile.getBasicBodyInfo().getWeightKg();
+        // Right Arm
+        if (request.getRightArmCircumferenceCm() != null) {
+            measurements.setRightArmCircumferenceCm(
+                    request.getRightArmCircumferenceCm()
+            );
+        }
 
-        Double newWaist =
-                profile.getBodyMeasurements() == null
-                        ? null
-                        : profile.getBodyMeasurements()
-                        .getWaistCircumferenceCm();
+        // Thigh
+        if (request.getThighCircumferenceCm() != null) {
+            measurements.setThighCircumferenceCm(
+                    request.getThighCircumferenceCm()
+            );
+        }
+
+        // ==================== Detect Changes ====================
 
         boolean changed =
-                Double.compare(oldWeight, newWeight) != 0
-                        || !Objects.equals(oldWaist, newWaist);
+                Double.compare(
+                        oldWeight,
+                        basic.getWeightKg()
+                ) != 0
 
+                        || !Objects.equals(
+                        oldBodyFat,
+                        basic.getBodyFatPercentage()
+                )
+
+                        || !Objects.equals(
+                        oldChest,
+                        measurements.getChestCircumferenceCm()
+                )
+
+                        || !Objects.equals(
+                        oldWaist,
+                        measurements.getWaistCircumferenceCm()
+                )
+
+                        || !Objects.equals(
+                        oldLeftArm,
+                        measurements.getLeftArmCircumferenceCm()
+                )
+
+                        || !Objects.equals(
+                        oldRightArm,
+                        measurements.getRightArmCircumferenceCm()
+                )
+
+                        || !Objects.equals(
+                        oldThigh,
+                        measurements.getThighCircumferenceCm()
+                );
+
+        // No actual change: preserve existing data and history.
         if (!changed) {
             return buildCompleteProfile(entity);
         }
 
-        // 5. Validate and apply the updated data.
+        // ==================== Save Changes ====================
+
+        // Apply validated Model values to Entity.
         entity.updateFromModel(profile);
 
-        // 6. Save the updated entity.
         BodyProfileEntity saved =
                 bodyProfileRepository.saveAndFlush(entity);
 
-// Record the updated body state.
+        // Append a new historical snapshot.
         saveHistory(saved);
 
         return buildCompleteProfile(saved);
     }
+
+
+    // ==================== Save History ====================
+
 
     // ==================== Save History ====================
 
@@ -230,22 +308,15 @@ public class BodyProfileService {
 
         BodyProfile profile = entity.toModel();
 
-        Double waist = null;
-
-        if (profile.getBodyMeasurements() != null) {
-            waist = profile.getBodyMeasurements()
-                    .getWaistCircumferenceCm();
-        }
-
         BodyProfileHistoryEntity history =
                 new BodyProfileHistoryEntity(
                         entity.getId(),
-                        profile.getBasicBodyInfo().getWeightKg(),
-                        waist
+                        profile
                 );
 
         historyRepository.save(history);
     }
+
 
     // ==================== Get Profile History ====================
 
@@ -273,6 +344,86 @@ public class BodyProfileService {
                 .stream()
                 .map(BodyProfileHistoryResponse::fromEntity)
                 .toList();
+    }
+
+    // ==================== PATCH Strength Profile ====================
+
+    @Transactional
+    public BodyProfile patchStrengthProfile(
+            Long userId,
+            StrengthProfilePatchRequest request
+    ) {
+        validateUserId(userId);
+
+        if (request == null || !request.isUpdateProvided()) {
+            throw new IllegalArgumentException(
+                    "At least one strength exercise must be provided"
+            );
+        }
+
+        // Find the user's existing body profile.
+        BodyProfileEntity entity = bodyProfileRepository
+                .findByUserId(userId)
+                .orElseThrow(() ->
+                        new NoSuchElementException(
+                                "Body profile not found"
+                        )
+                );
+
+        Long bodyProfileId = entity.getId();
+
+        // Convert and validate the complete PATCH payload
+        // before changing any persistent records.
+        StrengthProfile strength =
+                BodyProfileRequestMapper.mapStrength(request);
+
+        // ==================== Ordinary Exercises ====================
+
+        strengthService.updateExerciseRecords(
+                bodyProfileId,
+                StrengthExerciseType.BENCH_PRESS,
+                strength.getBenchPress()
+        );
+
+        strengthService.updateExerciseRecords(
+                bodyProfileId,
+                StrengthExerciseType.BARBELL_ROW,
+                strength.getBarbellRow()
+        );
+
+        strengthService.updateExerciseRecords(
+                bodyProfileId,
+                StrengthExerciseType.STRICT_PRESS,
+                strength.getStrictPress()
+        );
+
+        strengthService.updateExerciseRecords(
+                bodyProfileId,
+                StrengthExerciseType.DUMBBELL_SHOULDER_PRESS,
+                strength.getDumbbellShoulderPress()
+        );
+
+        strengthService.updateExerciseRecords(
+                bodyProfileId,
+                StrengthExerciseType.SQUAT,
+                strength.getSquat()
+        );
+
+        strengthService.updateExerciseRecords(
+                bodyProfileId,
+                StrengthExerciseType.LEG_PRESS,
+                strength.getLegPress()
+        );
+
+        // ==================== Pull-Up ====================
+
+        strengthService.updatePullUpRecords(
+                bodyProfileId,
+                strength.getPullUp()
+        );
+
+        // Return the updated complete profile.
+        return buildCompleteProfile(entity);
     }
 
 

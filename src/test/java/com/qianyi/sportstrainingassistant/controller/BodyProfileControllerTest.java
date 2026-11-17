@@ -389,25 +389,33 @@ class BodyProfileControllerTest {
     @Test
     void shouldGetProfileHistory() throws Exception {
 
+
         List<BodyProfileHistoryResponse> history =
                 List.of(
                         new BodyProfileHistoryResponse(
                                 1L,
                                 70.0,
+                                15.0,
+                                100.0,
                                 78.0,
-                                LocalDateTime.of(
-                                        2026, 11, 1, 9, 0
-                                )
+                                35.0,
+                                34.5,
+                                55.0,
+                                LocalDateTime.of(2026, 11, 1, 9, 0)
                         ),
                         new BodyProfileHistoryResponse(
                                 2L,
                                 72.0,
+                                15.0,
+                                100.0,
                                 79.0,
-                                LocalDateTime.of(
-                                        2026, 11, 16, 9, 0
-                                )
+                                35.0,
+                                34.5,
+                                55.0,
+                                LocalDateTime.of(2026, 11, 16, 9, 0)
                         )
                 );
+
 
         when(service.getProfileHistory(1L))
                 .thenReturn(history);

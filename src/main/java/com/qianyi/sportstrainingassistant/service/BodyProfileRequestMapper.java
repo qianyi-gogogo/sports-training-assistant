@@ -102,7 +102,7 @@ public final class BodyProfileRequestMapper {
 
     // ==================== Strength ====================
 
-    private static StrengthProfile mapStrength(
+    public static StrengthProfile mapStrength(
             StrengthProfileRequest request
     ) {
         StrengthProfile result = new StrengthProfile();
