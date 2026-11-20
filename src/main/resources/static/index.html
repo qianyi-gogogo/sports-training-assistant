@@ -1,258 +1,340 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Training Assistant</title>
-
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            margin: 0;
-            padding: 30px;
-            color: #222;
-        }
-
-        .container {
-            max-width: 750px;
-            margin: auto;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px #00000012;
-        }
-
-        h1 {
-            margin-bottom: 5px;
-        }
-
-        h2 {
-            font-size: 19px;
-        }
-
-        label {
-            display: block;
-            margin-top: 12px;
-            margin-bottom: 5px;
-        }
-
-        input, select {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-
-        button {
-            margin-top: 16px;
-            margin-right: 8px;
-            padding: 10px 18px;
-            border: none;
-            border-radius: 6px;
-            background: #2563eb;
-            color: white;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #1d4ed8;
-        }
-
-        pre {
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-            background: #eef2f7;
-            padding: 14px;
-            border-radius: 8px;
-        }
-
-        #status {
-            font-weight: bold;
-            white-space: pre-wrap;
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, "Microsoft YaHei", sans-serif; background: #f4f6fa; color: #1c2b3b; }
+        .container { max-width: 1100px; margin: auto; padding: 30px 20px; }
+        header { display: flex; justify-content: space-between; align-items: start; gap: 20px; margin-bottom: 28px; }
+        h1 { margin: 0 0 8px; font-size: 28px; }
+        h2 { margin: 0 0 8px; font-size: 20px; }
+        h3 { margin: 22px 0 10px; font-size: 16px; }
+        p { line-height: 1.6; }
+        .muted { color: #6c7a8b; }
+        .small { font-size: 13px; }
+        .card { background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; }
+        .hidden { display: none !important; }
+        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+        .wide { grid-column: 1 / -1; }
+        .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+        .stat { background: #f5f7fb; border-radius: 10px; padding: 16px; }
+        .stat span { display: block; color: #69798c; font-size: 13px; }
+        .stat strong { display: block; margin-top: 7px; font-size: 22px; }
+        .record, .history-item { display: flex; justify-content: space-between; gap: 14px; padding: 12px 0; border-bottom: 1px solid #edf0f4; }
+        .record span:last-child { text-align: right; }
+        .notice { background: #f5f7fb; border-radius: 10px; padding: 18px; margin-top: 20px; }
+        .onboarding { max-width: 750px; margin: 0 auto; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 22px 0; }
+        label { display: block; font-weight: 600; font-size: 14px; }
+        label span { display: block; margin-bottom: 7px; }
+        input, select { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; background: white; }
+        input:focus, select:focus { outline: 2px solid #93b4f5; outline-offset: 1px; }
+        button { background: #2563eb; color: white; border: 0; border-radius: 8px; padding: 12px 20px; font: inherit; cursor: pointer; }
+        button:hover:not(:disabled) { background: #1d4ed8; }
+        button:disabled { opacity: .55; cursor: wait; }
+        details { padding: 15px; border: 1px solid #e2e8f0; border-radius: 10px; }
+        summary { cursor: pointer; font-weight: 600; }
+        .message { margin: 14px 0; min-height: 24px; }
+        .error { color: #b42318; }
+        .account-name { color: #475569; font-weight: 600; }
+        @media (max-width: 720px) {
+            header { display: block; }
+            .grid, .form-grid { grid-template-columns: 1fr; }
+            .wide { grid-column: auto; }
         }
     </style>
 </head>
-
 <body>
 <div class="container">
+    <header>
+        <div>
+            <h1>Sports Training Assistant</h1>
+            <div class="muted">我的训练主页 · Dashboard</div>
+        </div>
+        <div id="accountName" class="account-name" aria-live="polite"></div>
+    </header>
 
-    <h1>Sports Training Assistant</h1>
-    <p>训练辅助系统 · 第一版网页</p>
+    <p id="loadingMessage" class="muted">正在读取账户与身体档案...</p>
+    <p id="pageError" class="message error hidden" role="alert"></p>
 
-    <div class="card">
-        <h2>用户</h2>
-
-        <label for="userId">测试用户 ID</label>
-        <input id="userId" type="number"
-               min="1" step="1" value="1">
-    </div>
-
-    <div class="card">
+    <!-- First-time setup is shown only if the current user has no profile. -->
+    <section id="setupSection" class="card onboarding hidden">
         <h2>创建身体档案</h2>
+        <p class="muted">欢迎首次使用！只需填写四项基础信息，其他数据以后可以补充。</p>
 
-        <label for="height">身高 (cm)</label>
-        <input id="height" type="number"
-               min="50" max="250" step="0.1"
-               value="175">
+        <form id="profileForm">
+            <div class="form-grid">
+                <label><span>身高（cm）*</span>
+                    <input id="heightCm" type="number" min="50" max="250" step="any" required placeholder="例如：175">
+                </label>
+                <label><span>体重（kg）*</span>
+                    <input id="weightKg" type="number" min="10" max="300" step="any" required placeholder="例如：70">
+                </label>
+                <label><span>年龄*</span>
+                    <input id="age" type="number" min="8" max="100" step="1" required placeholder="例如：21">
+                </label>
+                <label><span>生理性别*</span>
+                    <select id="biologicalSex" required>
+                        <option value="">请选择</option>
+                        <option value="MALE">男</option>
+                        <option value="FEMALE">女</option>
+                    </select>
+                </label>
+            </div>
 
-        <label for="weight">体重 (kg)</label>
-        <input id="weight" type="number"
-               min="10" max="300" step="0.1"
-               value="70">
+            <details>
+                <summary>其他身体数据（可选）</summary>
+                <div class="form-grid">
+                    <label><span>体脂率（%）</span>
+                        <input id="bodyFatPercentage" type="number" min="3" max="60" step="any" placeholder="可以留空">
+                    </label>
+                    <label><span>腰围（cm）</span>
+                        <input id="waistCircumferenceCm" type="number" min="30" max="200" step="any" placeholder="可以留空">
+                    </label>
+                    <label><span>胸围（cm）</span>
+                        <input id="chestCircumferenceCm" type="number" min="40" max="200" step="any" placeholder="可以留空">
+                    </label>
+                    <label><span>左臂围（cm）</span>
+                        <input id="leftArmCircumferenceCm" type="number" min="10" max="80" step="any" placeholder="可以留空">
+                    </label>
+                    <label><span>右臂围（cm）</span>
+                        <input id="rightArmCircumferenceCm" type="number" min="10" max="80" step="any" placeholder="可以留空">
+                    </label>
+                    <label><span>大腿围（cm）</span>
+                        <input id="thighCircumferenceCm" type="number" min="20" max="120" step="any" placeholder="可以留空">
+                    </label>
+                </div>
+            </details>
 
-        <label for="age">年龄</label>
-        <input id="age" type="number"
-               min="8" max="100" step="1"
-               value="21">
+            <p id="formMessage" class="message error" role="alert"></p>
+            <button id="saveProfileButton" type="submit">保存档案并进入主页</button>
+        </form>
+    </section>
 
-        <label for="sex">生理性别</label>
-        <select id="sex">
-            <option value="MALE">男</option>
-            <option value="FEMALE">女</option>
-        </select>
+    <!-- The existing three-module Dashboard. -->
+    <main id="dashboard" class="grid hidden">
+        <section class="card">
+            <h2>身体数据</h2>
+            <p class="muted">Body Profile</p>
+            <div class="stats">
+                <div class="stat"><span>当前体重</span><strong id="weight">—</strong></div>
+                <div class="stat"><span>身高</span><strong id="height">—</strong></div>
+                <div class="stat"><span>体脂率</span><strong id="bodyFat">—</strong></div>
+                <div class="stat"><span>腰围</span><strong id="waist">—</strong></div>
+            </div>
+            <h3>最近身体记录</h3>
+            <div id="bodyHistory" class="muted">暂无数据</div>
+        </section>
 
-        <button onclick="createProfile()">
-            创建档案
-        </button>
+        <section class="card">
+            <h2>力量数据</h2>
+            <p class="muted">Strength Profile</p>
+            <div id="strengthRecords" class="muted">暂无记录</div>
+        </section>
 
-        <button onclick="loadProfile()">
-            读取档案
-        </button>
-    </div>
-
-    <div class="card">
-        <h2>更新体重</h2>
-
-        <label for="newWeight">新体重 (kg)</label>
-        <input id="newWeight" type="number"
-               min="10" max="300" step="0.1"
-               value="72">
-
-        <button onclick="updateWeight()">
-            更新体重
-        </button>
-
-        <button onclick="loadHistory()">
-            查看历史
-        </button>
-    </div>
-
-    <div class="card">
-        <h2>运行结果</h2>
-
-        <p id="status">等待操作...</p>
-
-        <pre id="result">尚未读取数据</pre>
-    </div>
-
+        <section class="card wide">
+            <h2>周期训练计划</h2>
+            <p class="muted">Cycle Training Plan</p>
+            <div class="notice">
+                <strong>周期训练量管理</strong>
+                <p>AI 将结合用户目标和恢复情况，建议各肌群的周期训练量。用户自由选择每天的训练内容。</p>
+                <p class="muted small">该模块的训练计划 API 尚未开发，暂时不展示模拟完成量。</p>
+            </div>
+        </section>
+    </main>
 </div>
 
 <script>
-    function field(id) {
-        return document.getElementById(id);
-    }
+    const $ = id => document.getElementById(id);
+    let currentUser = null;
 
-    function profileUrl() {
-        const userId = Number(field("userId").value);
+    const exerciseNames = {
+        benchPress: "卧推",
+        barbellRow: "杠铃划船",
+        pullUp: "引体向上",
+        strictPress: "实力推",
+        dumbbellShoulderPress: "哑铃推肩",
+        squat: "深蹲",
+        legPress: "倒蹬"
+    };
 
-        if (!Number.isSafeInteger(userId) || userId <= 0) {
-            throw new Error("请输入有效的用户 ID");
+    // Use the authenticated account's ID, never an ID entered by the browser user.
+    const profileBase = () => `/api/users/${currentUser.userId}/profile`;
+    const showValue = (value, unit = "") => value == null ? "—" : `${value}${unit ? " " + unit : ""}`;
+    const optionalNumber = id => $(id).value.trim() === "" ? null : Number($(id).value);
+
+    async function requestJSON(url, options = {}) {
+        const response = await fetch(url, { credentials: "same-origin", ...options });
+        const type = response.headers.get("content-type") || "";
+
+        // The default Spring Security login page is HTML, not an API response.
+        if (response.redirected && new URL(response.url).pathname === "/login") {
+            window.location.assign("/login");
+            throw new Error("登录状态已失效，请重新登录");
         }
 
-        return `/api/users/${userId}/profile`;
-    }
-
-    async function request(url, method = "GET", body = null) {
-        const options = { method };
-
-        if (body !== null) {
-            options.headers = {
-                "Content-Type": "application/json"
-            };
-            options.body = JSON.stringify(body);
-        }
-
-        const response = await fetch(url, options);
-        const text = await response.text();
-
-        let data;
-
-        try {
-            data = text ? JSON.parse(text) : null;
-        } catch {
-            data = text;
+        let data = null;
+        if (type.includes("application/json")) {
+            data = await response.json();
         }
 
         if (!response.ok) {
-            throw new Error(
-                data?.error || `HTTP ${response.status}`
-            );
+            const error = new Error(data?.error || `HTTP ${response.status}`);
+            error.status = response.status;
+            throw error;
         }
-
         return data;
     }
 
-    async function execute(action) {
+    function renderBody(profile) {
+        const basic = profile.basicBodyInfo || {};
+        const measurements = profile.bodyMeasurements || {};
+        $("weight").textContent = showValue(basic.weightKg, "kg");
+        $("height").textContent = showValue(basic.heightCm, "cm");
+        $("bodyFat").textContent = showValue(basic.bodyFatPercentage, "%");
+        $("waist").textContent = showValue(measurements.waistCircumferenceCm, "cm");
+    }
+
+    function formatRecord(record, isPullUp) {
+        const rir = record.rir == null ? "" : ` · RIR ${record.rir}`;
+        if (isPullUp) {
+            if (record.mode === "BODYWEIGHT") return `自重 × ${record.reps}${rir}`;
+            const mode = record.mode === "WEIGHTED" ? "负重" : "辅助";
+            return `${mode} ${showValue(record.weightKg, "kg")} × ${record.reps}${rir}`;
+        }
+        return `${showValue(record.weightKg, "kg")} × ${record.reps}${rir}`;
+    }
+
+    function renderStrength(profile) {
+        const container = $("strengthRecords");
+        container.replaceChildren();
+        const strength = profile.strengthProfile || {};
+        let count = 0;
+        for (const [key, label] of Object.entries(exerciseNames)) {
+            const records = strength[key]?.records;
+            if (!Array.isArray(records) || records.length === 0) continue;
+            count++;
+            const row = document.createElement("div");
+            row.className = "record";
+            const title = document.createElement("span");
+            title.textContent = label;
+            const details = document.createElement("span");
+            details.textContent = records.map(r => formatRecord(r, key === "pullUp")).join("；");
+            row.append(title, details);
+            container.appendChild(row);
+        }
+        if (count === 0) container.textContent = "尚未记录力量数据";
+    }
+
+    async function loadHistory() {
+        const container = $("bodyHistory");
         try {
-            field("status").textContent = "请求中...";
-
-            const data = await action();
-
-            field("status").textContent = "操作成功";
-            field("result").textContent =
-                JSON.stringify(data, null, 2);
+            const history = await requestJSON(profileBase() + "/history");
+            container.replaceChildren();
+            if (!Array.isArray(history) || history.length === 0) {
+                container.textContent = "暂无身体历史记录";
+                return;
+            }
+            for (const item of history.slice(-5).reverse()) {
+                const row = document.createElement("div");
+                row.className = "history-item";
+                const time = item.recordedAt ? item.recordedAt.replace("T", " ").slice(0, 16) : "未知时间";
+                row.textContent = `${time} · ${showValue(item.weightKg, "kg")}`;
+                container.appendChild(row);
+            }
         } catch (error) {
-            field("status").textContent =
-                "操作失败：" + error.message;
+            container.textContent = `历史记录读取失败：${error.message}`;
         }
     }
 
-    function createProfile() {
-        execute(() => request(
-            profileUrl(),
-            "POST",
-            {
-                basicBodyInfo: {
-                    heightCm: Number(field("height").value),
-                    weightKg: Number(field("weight").value),
-                    age: Number(field("age").value),
-                    biologicalSex: field("sex").value
+    async function showDashboard(profile) {
+        renderBody(profile);
+        renderStrength(profile);
+        $("setupSection").classList.add("hidden");
+        $("dashboard").classList.remove("hidden");
+        await loadHistory();
+    }
+
+    async function initialize() {
+        $("pageError").classList.add("hidden");
+        try {
+            currentUser = await requestJSON("/api/auth/me");
+            if (!Number.isSafeInteger(currentUser?.userId)) {
+                throw new Error("无法识别当前登录账户");
+            }
+            $("accountName").textContent = `你好，${currentUser.username}`;
+            try {
+                const profile = await requestJSON(profileBase() + "/current");
+                await showDashboard(profile);
+            } catch (error) {
+                if (error.status === 404) {
+                    $("setupSection").classList.remove("hidden");
+                } else {
+                    throw error;
                 }
             }
-        ));
+        } catch (error) {
+            $("pageError").textContent = `加载失败：${error.message}`;
+            $("pageError").classList.remove("hidden");
+        } finally {
+            $("loadingMessage").classList.add("hidden");
+        }
     }
 
-    function loadProfile() {
-        execute(() => request(
-            profileUrl() + "/current"
-        ));
-    }
+    $("profileForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        const form = $("profileForm");
+        if (!form.reportValidity()) return;
+        const button = $("saveProfileButton");
+        button.disabled = true;
+        $("formMessage").textContent = "";
+        try {
+            const basicBodyInfo = {
+                heightCm: Number($("heightCm").value),
+                weightKg: Number($("weightKg").value),
+                age: Number($("age").value),
+                biologicalSex: $("biologicalSex").value
+            };
+            const bodyFat = optionalNumber("bodyFatPercentage");
+            if (bodyFat !== null) basicBodyInfo.bodyFatPercentage = bodyFat;
 
-    function updateWeight() {
-        execute(() => request(
-            profileUrl(),
-            "PATCH",
-            {
-                weightKg: Number(field("newWeight").value)
+            const bodyMeasurements = {};
+            for (const id of [
+                "waistCircumferenceCm", "chestCircumferenceCm",
+                "leftArmCircumferenceCm", "rightArmCircumferenceCm",
+                "thighCircumferenceCm"
+            ]) {
+                const value = optionalNumber(id);
+                if (value !== null) bodyMeasurements[id] = value;
             }
-        ));
-    }
 
-    function loadHistory() {
-        execute(() => request(
-            profileUrl() + "/history"
-        ));
-    }
+            const payload = { basicBodyInfo };
+            if (Object.keys(bodyMeasurements).length > 0) {
+                payload.bodyMeasurements = bodyMeasurements;
+            }
+
+            // CSRF remains enabled for authenticated POST requests.
+            const csrf = await requestJSON("/api/auth/csrf");
+            const profile = await requestJSON(profileBase(), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    [csrf.headerName]: csrf.token
+                },
+                body: JSON.stringify(payload)
+            });
+            await showDashboard(profile);
+        } catch (error) {
+            $("formMessage").textContent = `保存失败：${error.message}`;
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+    initialize();
 </script>
-
 </body>
 </html>
