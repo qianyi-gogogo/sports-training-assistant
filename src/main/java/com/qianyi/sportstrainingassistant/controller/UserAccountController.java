@@ -1,6 +1,7 @@
 package com.qianyi.sportstrainingassistant.controller;
 
 import com.qianyi.sportstrainingassistant.dto.request.auth.UserRegistrationRequest;
+import com.qianyi.sportstrainingassistant.dto.request.auth.ChangePasswordRequest;
 import com.qianyi.sportstrainingassistant.dto.response.auth.UserRegistrationResponse;
 import com.qianyi.sportstrainingassistant.service.UserAccountService;
 
@@ -10,6 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -42,6 +46,28 @@ public class UserAccountController {
     ) {
         return userAccountService.getCurrentUser(
                 authentication.getName()
+        );
+    }
+
+    // ==================== Change Password ====================
+
+    @PostMapping("/change-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse
+    ) {
+        userAccountService.changePassword(
+                authentication.getName(),
+                request.currentPassword(),
+                request.newPassword()
+        );
+
+        // Immediately log out the current session after a successful change.
+        new SecurityContextLogoutHandler().logout(
+                httpRequest, httpResponse, authentication
         );
     }
 
