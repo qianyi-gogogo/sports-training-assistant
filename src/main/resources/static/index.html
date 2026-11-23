@@ -40,6 +40,14 @@
         .message { margin: 14px 0; min-height: 24px; }
         .error { color: #b42318; }
         .account-name { color: #475569; font-weight: 600; }
+        .goal-list { display: grid; gap: 10px; margin: 16px 0 20px; }
+        .goal-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 14px; background: #f5f7fb; border-radius: 10px; }
+        .goal-row strong { font-size: 15px; }
+        .goal-actions { display: flex; gap: 6px; }
+        .goal-actions button { margin: 0; padding: 7px 12px; min-width: 38px; }
+        .goal-actions button:disabled { cursor: default; }
+        .goal-details { width: 100%; min-height: 80px; resize: vertical; margin-top: 8px; padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+        .goal-save { margin-top: 12px; }
         @media (max-width: 720px) {
             header { display: block; }
             .grid, .form-grid { grid-template-columns: 1fr; }
@@ -133,6 +141,20 @@
             <h2>力量数据</h2>
             <p class="muted">Strength Profile</p>
             <div id="strengthRecords" class="muted">暂无记录</div>
+        </section>
+
+        <section class="card wide">
+            <h2>训练目标</h2>
+            <p class="muted">将五个目标按重要程度排序。第一项优先级最高，点击箭头调整顺序。</p>
+            <p id="goalVersion" class="small muted">正在读取训练目标...</p>
+            <form id="goalForm">
+                <div id="goalPriorityList" class="goal-list"></div>
+                <label for="specificGoalDetails">具体目标（可选）</label>
+                <textarea id="specificGoalDetails" class="goal-details"
+                          placeholder="例如：优先提高上胸力量，避免膝盖疼痛的动作"></textarea>
+                <p id="goalMessage" class="message" role="status" aria-live="polite"></p>
+                <button id="goalSaveButton" class="goal-save" type="submit" disabled>保存训练目标</button>
+            </form>
         </section>
 
         <section class="card wide">
@@ -255,7 +277,7 @@
         renderStrength(profile);
         $("setupSection").classList.add("hidden");
         $("dashboard").classList.remove("hidden");
-        await loadHistory();
+        await Promise.all([loadHistory(), loadTrainingGoal()]);
     }
 
     async function initialize() {
@@ -333,6 +355,163 @@
             button.disabled = false;
         }
     });
+
+
+    // ==================== Training Goal Editor ====================
+    // The five fixed goals must each appear exactly once.
+    const goalLabels = {
+        MUSCLE_GAIN: "增肌",
+        FAT_LOSS: "减脂",
+        STRENGTH: "力量",
+        ENDURANCE: "耐力",
+        SPORT_PERFORMANCE: "运动表现"
+    };
+    let goalPriorityOrder = Object.keys(goalLabels);
+    let savedGoalVersion = null;
+    let savedGoalSnapshot = null;
+    let goalReady = false;
+
+    const goalBase = () => "/api/users/" + currentUser.userId + "/goals";
+
+    function goalPayload() {
+        return {
+            goalPriorities: [...goalPriorityOrder],
+            specificGoalDetails: $("specificGoalDetails").value.trim() || null
+        };
+    }
+
+    function goalMessage(message, isError = false) {
+        const node = $("goalMessage");
+        node.textContent = message;
+        node.classList.toggle("error", isError);
+    }
+
+    function moveGoal(index, direction) {
+        const target = index + direction;
+        if (target < 0 || target >= goalPriorityOrder.length) return;
+        [goalPriorityOrder[index], goalPriorityOrder[target]] =
+            [goalPriorityOrder[target], goalPriorityOrder[index]];
+        renderGoalPriorities();
+        goalMessage("");
+    }
+
+    function renderGoalPriorities() {
+        const list = $("goalPriorityList");
+        list.replaceChildren();
+
+        goalPriorityOrder.forEach((type, index) => {
+            const row = document.createElement("div");
+            row.className = "goal-row";
+
+            const label = document.createElement("strong");
+            label.textContent = (index + 1) + ". " + goalLabels[type];
+
+            const actions = document.createElement("div");
+            actions.className = "goal-actions";
+
+            const up = document.createElement("button");
+            up.type = "button";
+            up.textContent = "↑";
+            up.disabled = index === 0;
+            up.setAttribute("aria-label", "上移" + goalLabels[type]);
+            up.addEventListener("click", () => moveGoal(index, -1));
+
+            const down = document.createElement("button");
+            down.type = "button";
+            down.textContent = "↓";
+            down.disabled = index === goalPriorityOrder.length - 1;
+            down.setAttribute("aria-label", "下移" + goalLabels[type]);
+            down.addEventListener("click", () => moveGoal(index, 1));
+
+            actions.append(up, down);
+            row.append(label, actions);
+            list.appendChild(row);
+        });
+    }
+
+    async function loadTrainingGoal() {
+        goalReady = false;
+        $("goalSaveButton").disabled = true;
+        try {
+            const data = await requestJSON(goalBase() + "/current");
+            const values = data?.goalPriorities;
+            if (!Array.isArray(values) ||
+                values.length !== Object.keys(goalLabels).length ||
+                new Set(values).size !== values.length ||
+                !values.every(type => Object.hasOwn(goalLabels, type))) {
+                throw new Error("服务器返回的训练目标格式不正确");
+            }
+
+            goalPriorityOrder = [...values];
+            $("specificGoalDetails").value = data.specificGoalDetails || "";
+            savedGoalVersion = data.version;
+            savedGoalSnapshot = JSON.stringify(goalPayload());
+            $("goalVersion").textContent =
+                "当前版本：v" + savedGoalVersion + " · 修改后保存会创建新版本";
+            goalMessage("");
+            goalReady = true;
+        } catch (error) {
+            if (error.status === 404) {
+                goalPriorityOrder = Object.keys(goalLabels);
+                savedGoalVersion = null;
+                savedGoalSnapshot = null;
+                $("specificGoalDetails").value = "";
+                $("goalVersion").textContent = "还没有训练目标，保存后将创建 v1";
+                goalMessage("");
+                goalReady = true;
+            } else {
+                $("goalVersion").textContent = "训练目标加载失败";
+                goalMessage("读取失败：" + error.message + "。请刷新页面重试。", true);
+            }
+        } finally {
+            renderGoalPriorities();
+            $("goalSaveButton").disabled = !goalReady;
+        }
+    }
+
+    $("goalForm").addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!goalReady || !currentUser) return;
+
+        const payload = goalPayload();
+        const snapshot = JSON.stringify(payload);
+        if (snapshot === savedGoalSnapshot) {
+            goalMessage("目标没有变化，不需要创建新版本。");
+            return;
+        }
+
+        const button = $("goalSaveButton");
+        button.disabled = true;
+        goalMessage("");
+
+        try {
+            const csrf = await requestJSON("/api/auth/csrf");
+            const endpoint = savedGoalVersion == null ? goalBase() : goalBase() + "/versions";
+            const saved = await requestJSON(endpoint, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    [csrf.headerName]: csrf.token
+                },
+                body: JSON.stringify(payload)
+            });
+
+            savedGoalVersion = saved.version;
+            savedGoalSnapshot = JSON.stringify({
+                goalPriorities: saved.goalPriorities,
+                specificGoalDetails: saved.specificGoalDetails || null
+            });
+            $("goalVersion").textContent =
+                "当前版本：v" + savedGoalVersion + " · 历史版本已保留";
+            goalMessage("训练目标保存成功。");
+        } catch (error) {
+            goalMessage("保存失败：" + error.message, true);
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+    renderGoalPriorities();
 
     initialize();
 </script>
