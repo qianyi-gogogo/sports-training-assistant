@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 · Sports Training Assistant</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 20px; background: #f4f6fa; color: #1c2b3b; font-family: Arial, "Microsoft YaHei", sans-serif; }
+        .card { width: min(100%, 460px); padding: 30px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; }
+        h1 { font-size: 24px; margin: 0; }
+        p { line-height: 1.6; }
+        label { display: block; margin: 16px 0 7px; font-weight: 600; }
+        input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+        small { display: block; margin-top: 6px; color: #64748b; }
+        button { width: 100%; margin-top: 22px; padding: 12px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; font: inherit; cursor: pointer; }
+        button:disabled { opacity: .55; cursor: wait; }
+        a { color: #2563eb; text-decoration: none; }
+        .foot { margin-top: 18px; text-align: center; }
+        .error { color: #b42318; }
+        .message { min-height: 20px; }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>创建训练账户</h1>
+        <p>注册后就能保存身体记录和训练目标。</p>
+        <form id="registerForm">
+            <label for="username">用户名</label>
+            <input id="username" type="text" autocomplete="username" pattern="[A-Za-z0-9_]{3,32}" minlength="3" maxlength="32" required>
+            <small>3–32 位英文字母、数字或下划线</small>
+            <label for="email">电子邮箱</label>
+            <input id="email" type="email" autocomplete="email" maxlength="254" required>
+            <small>以后可用于验证账户所有权；邮件验证功能尚未上线</small>
+            <label for="password">密码</label>
+            <input id="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+            <small>8–72 个字符，最多 72 个 UTF-8 字节</small>
+            <label for="confirmPassword">确认密码</label>
+            <input id="confirmPassword" type="password" autocomplete="new-password" required>
+            <p id="message" class="message error" role="alert"></p>
+            <button id="registerButton" type="submit">注册</button>
+        </form>
+        <div class="foot">已有账户？<a href="/login.html">返回登录</a></div>
+    </main>
+    <script>
+        const form = document.getElementById("registerForm");
+        const message = document.getElementById("message");
+        const button = document.getElementById("registerButton");
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+            if (!form.reportValidity()) return;
+            const password = document.getElementById("password").value;
+            if (password !== document.getElementById("confirmPassword").value) {
+                message.textContent = "两次输入的密码不一致。";
+                return;
+            }
+            button.disabled = true;
+            message.textContent = "";
+            try {
+                const response = await fetch("/api/auth/register", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: document.getElementById("username").value.trim(),
+                        email: document.getElementById("email").value.trim(),
+                        password: password
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || "注册失败（HTTP " + response.status + "）");
+                location.assign("/login.html?registered=1");
+            } catch (error) {
+                message.textContent = error.message;
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
