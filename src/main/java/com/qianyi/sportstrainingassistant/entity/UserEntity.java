@@ -94,6 +94,16 @@ public class UserEntity {
         return createdAt;
     }
 
+    // ==================== Password Update ====================
+
+    public void changePasswordHash(String encodedPassword) {
+        if (encodedPassword == null || encodedPassword.isBlank()
+                || encodedPassword.length() > 100) {
+            throw new IllegalArgumentException("Invalid encoded password");
+        }
+        this.passwordHash = encodedPassword;
+    }
+
     // ==================== Email Verification ====================
 
     public void markEmailVerified() {
