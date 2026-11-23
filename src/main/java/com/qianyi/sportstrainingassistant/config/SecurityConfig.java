@@ -60,6 +60,10 @@ public class SecurityConfig {
                         // Registration does not require login.
                         .requestMatchers(
                                 "/api/auth/register",
+                                "/api/auth/csrf",
+                                "/login.html",
+                                "/register.html",
+                                "/forgot-password.html",
                                 "/error"
                         ).permitAll()
 
@@ -88,9 +92,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // Use Spring Security's built-in login page.
+                // Use our own login page; the POST /login endpoint remains Spring-managed.
                 .formLogin(form -> form
+                        .loginPage("/login.html")
+                        .loginProcessingUrl("/login")
                         .defaultSuccessUrl("/", true)
+                        .failureUrl("/login.html?error")
                         .permitAll()
                 )
 
