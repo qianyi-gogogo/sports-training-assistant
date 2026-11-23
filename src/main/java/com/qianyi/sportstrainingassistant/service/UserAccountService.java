@@ -126,6 +126,48 @@ public class UserAccountService {
         );
     }
 
+    // ==================== Change Password ====================
+
+    @Transactional
+    public void changePassword(
+            String username,
+            String currentPassword,
+            String newPassword
+    ) {
+        if (username == null || username.isBlank()
+                || currentPassword == null || currentPassword.isBlank()
+                || newPassword == null) {
+            throw new IllegalArgumentException("Password fields are required");
+        }
+
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new NoSuchElementException("Current user not found")
+                );
+
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        // Match registration rules, including BCrypt's 72-byte UTF-8 limit.
+        if (newPassword.length() < 8
+                || newPassword.length() > 72
+                || newPassword.getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException(
+                    "New password must be 8-72 characters and at most 72 UTF-8 bytes"
+            );
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException(
+                    "New password must differ from current password"
+            );
+        }
+
+        user.changePasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     // ==================== Current User ====================
 
     @Transactional(readOnly = true)
