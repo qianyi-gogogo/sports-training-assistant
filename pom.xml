@@ -30,7 +30,11 @@
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
-
+		<!-- Email sending support -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 		<!-- Session login and access control -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
