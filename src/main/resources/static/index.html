@@ -40,6 +40,9 @@
         .message { margin: 14px 0; min-height: 24px; }
         .error { color: #b42318; }
         .account-name { color: #475569; font-weight: 600; }
+        .account-tools { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+        .account-tools a { color: #2563eb; text-decoration: none; font-size: 14px; }
+        .account-tools button { background: transparent; color: #2563eb; padding: 0; margin: 0; font-size: 14px; }
         .goal-list { display: grid; gap: 10px; margin: 16px 0 20px; }
         .goal-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 14px; background: #f5f7fb; border-radius: 10px; }
         .goal-row strong { font-size: 15px; }
@@ -62,7 +65,11 @@
             <h1>Sports Training Assistant</h1>
             <div class="muted">我的训练主页 · Dashboard</div>
         </div>
-        <div id="accountName" class="account-name" aria-live="polite"></div>
+        <div class="account-tools">
+            <div id="accountName" class="account-name" aria-live="polite"></div>
+            <a href="/change-password.html">修改密码</a>
+            <button id="logoutButton" type="button">退出登录</button>
+        </div>
     </header>
 
     <p id="loadingMessage" class="muted">正在读取账户与身体档案...</p>
@@ -193,8 +200,9 @@
         const type = response.headers.get("content-type") || "";
 
         // The default Spring Security login page is HTML, not an API response.
-        if (response.redirected && new URL(response.url).pathname === "/login") {
-            window.location.assign("/login");
+        if (response.redirected &&
+            ["/login", "/login.html"].includes(new URL(response.url).pathname)) {
+            window.location.assign("/login.html");
             throw new Error("登录状态已失效，请重新登录");
         }
 
@@ -512,6 +520,25 @@
     });
 
     renderGoalPriorities();
+
+    $("logoutButton").addEventListener("click", async () => {
+        const button = $("logoutButton");
+        button.disabled = true;
+        try {
+            const csrf = await requestJSON("/api/auth/csrf");
+            const response = await fetch("/logout", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { [csrf.headerName]: csrf.token }
+            });
+            if (!response.ok) throw new Error("退出失败（HTTP " + response.status + "）");
+            window.location.assign("/login.html?logout=1");
+        } catch (error) {
+            $("pageError").textContent = "退出失败：" + error.message;
+            $("pageError").classList.remove("hidden");
+            button.disabled = false;
+        }
+    });
 
     initialize();
 </script>
