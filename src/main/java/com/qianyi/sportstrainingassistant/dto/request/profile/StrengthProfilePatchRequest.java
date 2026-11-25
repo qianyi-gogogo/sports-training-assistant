@@ -17,6 +17,6 @@ public class StrengthProfilePatchRequest
                 || getStrictPress() != null
                 || getDumbbellShoulderPress() != null
                 || getSquat() != null
-                || getLegPress() != null;
+                ||getdeadlift() != null;
     }
 }

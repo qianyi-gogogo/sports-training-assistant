@@ -33,7 +33,7 @@ public class StrengthProfileRequest {
 
     @Valid
     @Size(min = 1)
-    private List<StrengthRecordRequest> legPress;
+    private List<StrengthRecordRequest> deadlift;
 
 
     public List<StrengthRecordRequest> getBenchPress() {
@@ -85,11 +85,11 @@ public class StrengthProfileRequest {
         this.squat = squat;
     }
 
-    public List<StrengthRecordRequest> getLegPress() {
-        return legPress;
+    public List<StrengthRecordRequest> getdeadlift() {
+        return deadlift;
     }
 
-    public void setLegPress(List<StrengthRecordRequest> legPress) {
-        this.legPress = legPress;
+    public void setdeadlift(List<StrengthRecordRequest> deadlift) {
+        this.deadlift = deadlift;
     }
 }

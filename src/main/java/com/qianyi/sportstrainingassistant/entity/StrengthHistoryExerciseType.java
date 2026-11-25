@@ -9,6 +9,6 @@ public enum StrengthHistoryExerciseType {
     STRICT_PRESS,
     DUMBBELL_SHOULDER_PRESS,
     SQUAT,
-    LEG_PRESS
+    DEADLIFT
 }
 

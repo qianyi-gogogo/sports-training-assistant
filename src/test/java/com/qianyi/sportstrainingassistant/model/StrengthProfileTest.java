@@ -157,7 +157,7 @@ public class StrengthProfileTest {
 
 
     @Test
-    void shouldStoreAndRetrieveLegPress() {
+    void shouldStoreAndRetrievedeadlift() {
 
         ExerciseStrength strength =
                 createExerciseStrength();
@@ -165,11 +165,11 @@ public class StrengthProfileTest {
         StrengthProfile profile =
                 new StrengthProfile();
 
-        profile.setLegPress(strength);
+        profile.setDeadlift(strength);
 
         assertSame(
                 strength,
-                profile.getLegPress()
+                profile.getDeadlift()
         );
     }
 
@@ -188,6 +188,6 @@ public class StrengthProfileTest {
         assertNull(profile.getStrictPress());
         assertNull(profile.getDumbbellShoulderPress());
         assertNull(profile.getSquat());
-        assertNull(profile.getLegPress());
+        assertNull(profile.getDeadlift());
     }
 }

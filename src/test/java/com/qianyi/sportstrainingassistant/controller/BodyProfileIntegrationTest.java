@@ -18,6 +18,11 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.qianyi.sportstrainingassistant.entity.UserEntity;
+import com.qianyi.sportstrainingassistant.repository.UserRepository;
+import com.qianyi.sportstrainingassistant.security.AccountPrincipal;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -38,11 +43,38 @@ class BodyProfileIntegrationTest {
     @Autowired
     private StrengthHistoryRecordRepository historyRecordRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private AccountPrincipal testPrincipal;
     // ==================== Test Data ====================
 
+    // Create a verified test account.
     private Long createUserId() {
-        return UUID.randomUUID()
-                .getMostSignificantBits() & Long.MAX_VALUE;
+
+        String username = "test_" +
+                UUID.randomUUID()
+                        .toString()
+                        .replace("-", "")
+                        .substring(0, 20);
+
+        UserEntity user = new UserEntity(
+                username,
+                username + "@example.com",
+                "test-password-hash"
+        );
+
+        user.markEmailVerified();
+
+        user = userRepository.saveAndFlush(user);
+
+        testPrincipal = new AccountPrincipal(
+                user.getUsername(),
+                user.getPasswordHash(),
+                true
+        );
+
+        return user.getId();
     }
 
     private String validJson() {
@@ -100,7 +132,7 @@ class BodyProfileIntegrationTest {
 
         // 1. Create profile through HTTP.
         mockMvc.perform(
-                        post(url)
+                        post(url).with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(validJson())
                 )
@@ -114,7 +146,7 @@ class BodyProfileIntegrationTest {
 
         // 3. Read through HTTP.
         mockMvc.perform(
-                        get(url + "/current")
+                        get(url + "/current").with(user(testPrincipal))
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.basicBodyInfo.heightCm")
@@ -147,14 +179,14 @@ class BodyProfileIntegrationTest {
         String url = "/api/users/" + userId + "/profile";
 
         mockMvc.perform(
-                        post(url)
+                        post(url).with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(validJson())
                 )
                 .andExpect(status().isCreated());
 
         mockMvc.perform(
-                        post(url)
+                        post(url).with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(validJson())
                 )
@@ -171,6 +203,7 @@ class BodyProfileIntegrationTest {
 
         mockMvc.perform(
                         get("/api/users/" + userId + "/profile/current")
+                                .with(user(testPrincipal))
                 )
                 .andExpect(status().isNotFound());
     }
@@ -186,7 +219,7 @@ class BodyProfileIntegrationTest {
 
         // 1. Create a complete body profile.
         mockMvc.perform(
-                        post(url)
+                        post(url).with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(validJson())
                 )
@@ -197,7 +230,7 @@ class BodyProfileIntegrationTest {
 
         // 2. Update weight only.
         mockMvc.perform(
-                        patch(url)
+                        patch(url).with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                 {
@@ -214,7 +247,7 @@ class BodyProfileIntegrationTest {
 
         // 3. Read the profile again.
         mockMvc.perform(
-                        get(url + "/current")
+                        get(url + "/current").with(user(testPrincipal))
                 )
                 .andExpect(status().isOk())
 
@@ -262,7 +295,7 @@ class BodyProfileIntegrationTest {
 
         // 1. Create a valid profile.
         mockMvc.perform(
-                        post(url)
+                        post(url).with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(validJson())
                 )
@@ -270,7 +303,7 @@ class BodyProfileIntegrationTest {
 
         // 2. Try to set an invalid weight.
         mockMvc.perform(
-                        patch(url)
+                        patch(url).with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                 {
@@ -285,7 +318,7 @@ class BodyProfileIntegrationTest {
 
         // 3. Confirm the original weight remains.
         mockMvc.perform(
-                        get(url + "/current")
+                        get(url + "/current").with(user(testPrincipal))
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.basicBodyInfo.weightKg")
@@ -303,7 +336,7 @@ class BodyProfileIntegrationTest {
 
         // 1. Create the initial profile.
         mockMvc.perform(
-                        post(url)
+                        post(url).with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(validJson())
                 )
@@ -311,7 +344,7 @@ class BodyProfileIntegrationTest {
 
         // 2. Update body weight.
         mockMvc.perform(
-                        patch(url)
+                        patch(url).with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                 {
@@ -326,7 +359,7 @@ class BodyProfileIntegrationTest {
 
         // 3. Verify historical snapshots.
         mockMvc.perform(
-                        get(url + "/history")
+                        get(url + "/history").with(user(testPrincipal))
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -352,7 +385,7 @@ class BodyProfileIntegrationTest {
 
         // 1. Create a complete profile.
         mockMvc.perform(
-                post(url)
+                post(url).with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson())
         ).andExpect(status().isCreated());
@@ -362,7 +395,7 @@ class BodyProfileIntegrationTest {
 
         // 2. Update bench press only.
         mockMvc.perform(
-                        patch(url + "/strength")
+                        patch(url + "/strength").with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                         {
@@ -394,7 +427,7 @@ class BodyProfileIntegrationTest {
 
         // 3. Read the current profile again.
         mockMvc.perform(
-                        get(url + "/current")
+                        get(url + "/current").with(user(testPrincipal))
                 )
                 .andExpect(status().isOk())
 
@@ -430,14 +463,14 @@ class BodyProfileIntegrationTest {
 
         // Create initial profile.
         mockMvc.perform(
-                post(url)
+                post(url).with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson())
         ).andExpect(status().isCreated());
 
         // Update bench press.
         mockMvc.perform(
-                patch(url + "/strength")
+                patch(url + "/strength").with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                         {
@@ -481,14 +514,14 @@ class BodyProfileIntegrationTest {
 
         // Create initial profile.
         mockMvc.perform(
-                post(url)
+                post(url).with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson())
         ).andExpect(status().isCreated());
 
         // Change bodyweight pull-up to weighted pull-up.
         mockMvc.perform(
-                        patch(url + "/strength")
+                        patch(url + "/strength").with(user(testPrincipal)).with(csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                         {
@@ -516,7 +549,7 @@ class BodyProfileIntegrationTest {
 
         // Verify data after reloading from database.
         mockMvc.perform(
-                        get(url + "/current")
+                        get(url + "/current").with(user(testPrincipal))
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(
@@ -552,7 +585,7 @@ class BodyProfileIntegrationTest {
         String url = "/api/users/" + userId + "/profile";
 
         mockMvc.perform(
-                post(url)
+                post(url).with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson())
         ).andExpect(status().isCreated());
@@ -571,14 +604,14 @@ class BodyProfileIntegrationTest {
 
         // First update.
         mockMvc.perform(
-                patch(url + "/strength")
+                patch(url + "/strength").with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(patchJson)
         ).andExpect(status().isOk());
 
         // Repeat exactly the same update.
         mockMvc.perform(
-                patch(url + "/strength")
+                patch(url + "/strength").with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(patchJson)
         ).andExpect(status().isOk());
@@ -612,14 +645,14 @@ class BodyProfileIntegrationTest {
         String url = "/api/users/" + userId + "/profile";
 
         mockMvc.perform(
-                post(url)
+                post(url).with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson())
         ).andExpect(status().isCreated());
 
         // Weight exceeds the allowed 500 kg maximum.
         mockMvc.perform(
-                patch(url + "/strength")
+                patch(url + "/strength").with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                         {
@@ -639,7 +672,7 @@ class BodyProfileIntegrationTest {
 
         // The original bench press remains unchanged.
         mockMvc.perform(
-                        get(url + "/current")
+                        get(url + "/current").with(user(testPrincipal))
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(
@@ -673,14 +706,14 @@ class BodyProfileIntegrationTest {
 
         // 1. Create initial strength records.
         mockMvc.perform(
-                post(url)
+                post(url).with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson())
         ).andExpect(status().isCreated());
 
         // 2. Update bench press records.
         mockMvc.perform(
-                patch(url + "/strength")
+                patch(url + "/strength").with(user(testPrincipal)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                         {

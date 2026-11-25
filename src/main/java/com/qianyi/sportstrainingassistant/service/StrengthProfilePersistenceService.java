@@ -80,8 +80,8 @@ public class StrengthProfilePersistenceService {
                 strength.getSquat());
 
         saveExercise(bodyProfileId,
-                StrengthExerciseType.LEG_PRESS,
-                strength.getLegPress());
+                StrengthExerciseType.DEADLIFT,
+                strength.getDeadlift());
 
         savePullUps(bodyProfileId, strength.getPullUp());
     }
@@ -392,8 +392,8 @@ public class StrengthProfilePersistenceService {
         profile.setSquat(loadExercise(
                 bodyProfileId, StrengthExerciseType.SQUAT));
 
-        profile.setLegPress(loadExercise(
-                bodyProfileId, StrengthExerciseType.LEG_PRESS));
+        profile.setDeadlift(loadExercise(
+                bodyProfileId, StrengthExerciseType.DEADLIFT));
 
         List<PullUpRecord> pullUpRecords = pullUpRepository
                 .findByBodyProfileIdOrderByRecordIndexAsc(bodyProfileId)

@@ -206,7 +206,7 @@ public class StrengthProfileRequestTest {
                 List.of(createValidStrengthRecord())
         );
 
-        request.setLegPress(
+        request.setdeadlift(
                 List.of(createValidStrengthRecord())
         );
 

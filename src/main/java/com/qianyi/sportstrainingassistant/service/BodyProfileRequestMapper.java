@@ -127,8 +127,8 @@ public final class BodyProfileRequestMapper {
                 mapExercise(request.getSquat())
         );
 
-        result.setLegPress(
-                mapExercise(request.getLegPress())
+        result.setDeadlift(
+                mapExercise(request.getdeadlift())
         );
 
         if (request.getPullUp() != null) {

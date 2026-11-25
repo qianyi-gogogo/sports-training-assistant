@@ -14,8 +14,7 @@ public class StrengthProfile {
 
     // Legs
     private ExerciseStrength squat;
-    private ExerciseStrength legPress;
-
+    private ExerciseStrength deadlift;
 
     // ==================== Bench Press ====================
 
@@ -78,16 +77,16 @@ public class StrengthProfile {
     public void setSquat(ExerciseStrength squat) {
         this.squat = squat;
     }
-    // ==================== Leg Press ====================
+    // ==================== Deadlift ====================
 
-    // Legs
+// Posterior Chain
 
-    public ExerciseStrength getLegPress() {
-        return legPress;
+    public ExerciseStrength getDeadlift() {
+        return deadlift;
     }
 
-    public void setLegPress(ExerciseStrength legPress) {
-        this.legPress = legPress;
+    public void setDeadlift(ExerciseStrength deadlift) {
+        this.deadlift = deadlift;
     }
 
 

@@ -120,7 +120,7 @@ public class BodyProfileService {
                 || strength.getStrictPress() != null
                 || strength.getDumbbellShoulderPress() != null
                 || strength.getSquat() != null
-                || strength.getLegPress() != null;
+                || strength.getDeadlift() != null;
     }
 
     // ==================== Validation ====================
@@ -411,8 +411,8 @@ public class BodyProfileService {
 
         strengthService.updateExerciseRecords(
                 bodyProfileId,
-                StrengthExerciseType.LEG_PRESS,
-                strength.getLegPress()
+                StrengthExerciseType.DEADLIFT,
+                strength.getDeadlift()
         );
 
         // ==================== Pull-Up ====================

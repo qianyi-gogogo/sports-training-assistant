@@ -162,6 +162,14 @@
                 <p id="goalMessage" class="message" role="status" aria-live="polite"></p>
                 <button id="goalSaveButton" class="goal-save" type="submit" disabled>保存训练目标</button>
             </form>
+            <details id="goalHistoryPanel" style="margin-top: 20px;">
+                <summary style="cursor: pointer; font-weight: 600;">
+                    查看历史训练目标
+                </summary>
+                <div id="goalHistoryList" style="margin-top: 12px;">
+                    暂无记录
+                </div>
+            </details>
         </section>
 
         <section class="card wide">
@@ -187,7 +195,7 @@
         strictPress: "实力推",
         dumbbellShoulderPress: "哑铃推肩",
         squat: "深蹲",
-        legPress: "倒蹬"
+        deadlift: "倒蹬"
     };
 
     // Use the authenticated account's ID, never an ID entered by the browser user.
@@ -436,6 +444,73 @@
             list.appendChild(row);
         });
     }
+    // ==================== Training Goal History ====================
+
+    async function loadGoalHistory() {
+        if (!currentUser) return;
+
+        const list = $("goalHistoryList");
+        list.textContent = "正在加载历史记录...";
+
+        try {
+            const history = await requestJSON(
+                goalBase() + "/history"
+            );
+
+            if (!Array.isArray(history)) {
+                throw new Error("历史记录格式错误");
+            }
+
+            list.replaceChildren();
+
+            if (history.length === 0) {
+                list.textContent = "暂无历史训练目标";
+                return;
+            }
+
+            for (const goal of history) {
+                const item = document.createElement("div");
+                item.className = "notice";
+                item.style.marginBottom = "12px";
+
+                const heading = document.createElement("strong");
+                heading.textContent = "版本 v" + goal.version;
+
+                const time = document.createElement("p");
+                time.className = "small muted";
+                time.textContent = goal.createdAt
+                    ? goal.createdAt.replace("T", " ").slice(0, 19)
+                    : "时间未知";
+
+                const priorities = document.createElement("p");
+                priorities.textContent = goal.goalPriorities
+                    .map(type => goalLabels[type] || type)
+                    .join(" → ");
+
+                const details = document.createElement("p");
+                details.textContent =
+                    goal.specificGoalDetails || "无额外目标说明";
+
+                item.append(
+                    heading,
+                    time,
+                    priorities,
+                    details
+                );
+
+                list.appendChild(item);
+            }
+
+        } catch (error) {
+            list.textContent = "加载失败：" + error.message;
+        }
+    }
+
+    $("goalHistoryPanel").addEventListener("toggle", () => {
+        if ($("goalHistoryPanel").open) {
+            loadGoalHistory();
+        }
+    });
 
     async function loadTrainingGoal() {
         goalReady = false;
@@ -512,6 +587,9 @@
             $("goalVersion").textContent =
                 "当前版本：v" + savedGoalVersion + " · 历史版本已保留";
             goalMessage("训练目标保存成功。");
+            if ($("goalHistoryPanel").open) {
+                await loadGoalHistory();
+            }
         } catch (error) {
             goalMessage("保存失败：" + error.message, true);
         } finally {
