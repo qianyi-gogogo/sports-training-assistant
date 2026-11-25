@@ -70,6 +70,9 @@ public class SecurityConfig {
                                 "/login.html",
                                 "/register.html",
                                 "/forgot-password.html",
+                                "/reset-password.html",
+                                "/api/auth/password-reset/request",
+                                "/api/auth/password-reset/confirm",
                                 "/error",
                                 "/api/auth/email/session"
                         ).permitAll()
