@@ -43,8 +43,10 @@
         const params = new URLSearchParams(location.search);
         const message = document.getElementById("message");
         if (params.has("error")) {
-            message.textContent = "用户名或密码不正确，请重试。";
+            message.textContent = "用户名或密码错误，或者邮箱尚未完成验证。";
             message.classList.add("error");
+        } else if (params.has("verified")) {
+            message.textContent = "邮箱验证成功，请登录。";
         } else if (params.has("registered")) {
             message.textContent = "注册成功，请登录。";
         } else if (params.has("passwordChanged")) {

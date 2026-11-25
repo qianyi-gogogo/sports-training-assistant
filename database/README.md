@@ -1,0 +1,2 @@
+# Database
+MySQL 8.0 baseline exported on 2026-11-24. Run schema files 00 through 06 in numeric order on a new database. CREATE TABLE IF NOT EXISTS does not upgrade existing tables. Do not execute the original Workbench dump on a populated database: it contains DROP TABLE statements. No user data included. Existing constraints and column types are preserved. Future schema changes belong in migrations; synthetic fixtures in test; inspection SQL in queries.

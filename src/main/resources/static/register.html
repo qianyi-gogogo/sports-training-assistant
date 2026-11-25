@@ -31,7 +31,12 @@
             <small>3–32 位英文字母、数字或下划线</small>
             <label for="email">电子邮箱</label>
             <input id="email" type="email" autocomplete="email" maxlength="254" required>
-            <small>以后可用于验证账户所有权；邮件验证功能尚未上线</small>
+            <small>
+                注册后需要完成邮箱验证才能登录。
+                验证码最长有效期为10分钟，
+                每小时最多发送5次，累计允许5次错误验证。
+                未完成验证的账户满足过期条件后将被自动清理。
+            </small>
             <label for="password">密码</label>
             <input id="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
             <small>8–72 个字符，最多 72 个 UTF-8 字节</small>
@@ -57,10 +62,24 @@
             button.disabled = true;
             message.textContent = "";
             try {
+                const csrfResponse = await fetch("/api/auth/csrf", {
+                    credentials: "same-origin",
+                    cache: "no-store"
+                });
+
+                if (!csrfResponse.ok) {
+                    throw new Error("无法获取安全令牌");
+                }
+
+                const csrf = await csrfResponse.json();
+
                 const response = await fetch("/api/auth/register", {
                     method: "POST",
                     credentials: "same-origin",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        [csrf.headerName]: csrf.token
+                    },
                     body: JSON.stringify({
                         username: document.getElementById("username").value.trim(),
                         email: document.getElementById("email").value.trim(),
@@ -69,7 +88,8 @@
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(data.error || "注册失败（HTTP " + response.status + "）");
-                location.assign("/login.html?registered=1");
+
+                location.assign("/verify-email.html");
             } catch (error) {
                 message.textContent = error.message;
                 button.disabled = false;

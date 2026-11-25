@@ -33,9 +33,27 @@ public class UserAccountController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public UserRegistrationResponse register(
-            @Valid @RequestBody UserRegistrationRequest request
+            @Valid @RequestBody UserRegistrationRequest request,
+            HttpServletRequest httpRequest
     ) {
-        return userAccountService.register(request);
+
+        UserRegistrationResponse response =
+                userAccountService.register(request);
+
+        // ==================== Verification Session ====================
+
+        var session = httpRequest.getSession(true);
+
+// Rotate the session ID for security.
+        httpRequest.changeSessionId();
+
+// Bind the verification session to the registered user.
+        session.setAttribute(
+                "verificationUserId",
+                response.userId()
+        );
+
+        return response;
     }
 
     // ==================== Current User ====================

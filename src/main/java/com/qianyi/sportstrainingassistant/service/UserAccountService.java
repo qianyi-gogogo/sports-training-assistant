@@ -19,12 +19,17 @@ public class UserAccountService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final AccountCleanupService accountCleanupService;
 
-    // ==================== Constructor ====================
+// ==================== Constructor ====================
 
-    public UserAccountService(UserRepository userRepository) {
+    public UserAccountService(
+            UserRepository userRepository,
+            AccountCleanupService accountCleanupService
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
+        this.accountCleanupService = accountCleanupService;
     }
 
     // ==================== Register ====================
@@ -78,19 +83,64 @@ public class UserAccountService {
             );
         }
 
-        // ==================== Check Duplicates ====================
 
-        if (userRepository.existsByUsername(username)) {
+// ==================== Resolve Existing Accounts ====================
+
+        var conflictingIds =
+                userRepository.findConflictingUserIds(
+                        username,
+                        email
+                );
+
+        for (Long userId : conflictingIds) {
+
+            var existing =
+                    userRepository.findByIdForUpdate(userId);
+
+            if (existing.isEmpty()) {
+                continue;
+            }
+
+            UserEntity previous = existing.get();
+
+            // Remove expired unverified accounts when eligible.
+            if (accountCleanupService.deleteExpiredAccount(userId)) {
+                continue;
+            }
+
+            // Resume registration only when all credentials match.
+            if (!previous.isEmailVerified()
+                    && previous.getUsername().equals(username)
+                    && email.equals(previous.getEmail())
+                    && passwordEncoder.matches(
+                    password,
+                    previous.getPasswordHash()
+            )) {
+
+                return new UserRegistrationResponse(
+                        previous.getId(),
+                        previous.getUsername(),
+                        previous.getEmail(),
+                        previous.isEmailVerified()
+                );
+            }
+
+            // Protect existing accounts from unauthorized replacement.
             throw new IllegalStateException(
-                    "Username already exists"
+                    "Username or email is already in use"
             );
         }
 
-        if (userRepository.existsByEmail(email)) {
+// ==================== Check Remaining Conflicts ====================
+
+        if (userRepository.existsByUsername(username)
+                || userRepository.existsByEmail(email)) {
+
             throw new IllegalStateException(
-                    "Email already exists"
+                    "Username or email is already in use"
             );
         }
+
 
         // ==================== Password Hashing ====================
 

@@ -1,0 +1,666 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>邮箱验证 · Sports Training Assistant</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: #f4f6fa;
+            color: #1c2b3b;
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            padding: 20px;
+        }
+
+        .card {
+            width: min(100%, 440px);
+            padding: 32px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+        }
+
+        h2 { margin-top: 0; }
+
+        p {
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .secondary {
+            background: #64748b;
+        }
+
+        .muted {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .counter {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0 6px;
+            font-size: 14px;
+        }
+
+        .track {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            width: 0;
+            background: #2563eb;
+            transition: width 0.2s;
+        }
+
+        .warning {
+            color: #b42318;
+        }
+
+        .message {
+            min-height: 24px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="card">
+
+    <h2>验证你的邮箱</h2>
+
+    <p class="muted">
+        验证码最长有效期为10分钟。
+        每个一小时限制周期最多发送5次，
+        累计允许5次错误验证。
+    </p>
+
+    <label for="email">电子邮箱</label>
+
+    <input id="email"
+           type="email"
+           maxlength="254"
+           autocomplete="email"
+           readonly
+           required>
+    <!-- ==================== Send Counter ==================== -->
+
+    <div class="counter">
+        <span>剩余发送次数</span>
+        <strong id="sendAttempts">— / 5</strong>
+    </div>
+
+    <div class="track">
+        <div id="sendBar" class="bar"></div>
+    </div>
+
+    <button id="sendButton"
+            class="secondary"
+            type="button"
+            disabled>
+        发送验证码
+    </button>
+
+    <!-- ==================== Verification Form ==================== -->
+
+    <form id="verifyForm">
+
+        <label for="code">验证码</label>
+
+        <input id="code"
+               type="text"
+               inputmode="numeric"
+               autocomplete="one-time-code"
+               pattern="[0-9]{6}"
+               maxlength="6"
+               required>
+
+        <div class="counter">
+            <span>剩余验证机会</span>
+            <strong id="verifyAttempts">— / 5</strong>
+        </div>
+
+        <div class="track">
+            <div id="verifyBar" class="bar"></div>
+        </div>
+
+        <button id="verifyButton"
+                type="submit"
+                disabled>
+            验证邮箱
+        </button>
+
+    </form>
+
+    <p id="message"
+       class="message"
+       role="status"
+       aria-live="polite"></p>
+
+    <div id="expiryText" class="muted"></div>
+    <div id="windowText" class="muted"></div>
+
+    <p><a href="/login.html">返回登录</a></p>
+
+</main>
+
+<script>
+
+    // ==================== Elements ====================
+
+    const $ = id => document.getElementById(id);
+
+    const email = $("email");
+    const code = $("code");
+
+    const sendButton = $("sendButton");
+    const verifyButton = $("verifyButton");
+
+    let csrf = null;
+    let busy = false;
+
+    let remainingSends = null;
+    let remainingAttempts = null;
+
+    let resendDeadline = null;
+    let expiryDeadline = null;
+    let windowDeadline = null;
+
+
+
+    // ==================== HTTP Request ====================
+
+    async function postJSON(url, payload) {
+
+        const response = await fetch(url, {
+            method: "POST",
+
+            credentials: "same-origin",
+
+            headers: {
+                "Content-Type": "application/json",
+                [csrf.headerName]: csrf.token
+            },
+
+            body: JSON.stringify(payload)
+        });
+// Redirect when verification permission is unavailable.
+        if (response.status === 403) {
+
+            location.replace("/login.html");
+
+            throw new Error(
+                "Verification session is unavailable"
+            );
+        }
+
+        const data = await response.json()
+            .catch(() => ({}));
+
+        // Business responses may use HTTP 400 or 429.
+        if (data.status) {
+            return data;
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                data.error || "请求失败：" + response.status
+            );
+        }
+
+        throw new Error("服务器返回了未知响应");
+    }
+
+    // ==================== Time Helpers ====================
+
+    function toDeadline(seconds) {
+
+        if (seconds == null) {
+            return null;
+        }
+
+        return Date.now()
+            + Math.max(0, seconds) * 1000;
+    }
+
+    function secondsLeft(deadline) {
+
+        if (deadline === null) {
+            return null;
+        }
+
+        return Math.max(
+            0,
+            Math.ceil((deadline - Date.now()) / 1000)
+        );
+    }
+
+    function formatTime(seconds) {
+
+        const minutes = Math.floor(seconds / 60);
+        const remainder = seconds % 60;
+
+        return String(minutes).padStart(2, "0")
+            + ":"
+            + String(remainder).padStart(2, "0");
+    }
+
+    // ==================== Display Message ====================
+
+    function showMessage(text, warning = false) {
+
+        $("message").textContent = text;
+
+        $("message").classList.toggle(
+            "warning",
+            warning
+        );
+    }
+
+    // ==================== Apply Backend Response ====================
+
+    function applyResponse(data) {
+
+        remainingSends =
+            data.remainingSendAttempts ?? null;
+
+        remainingAttempts =
+            data.remainingVerificationAttempts ?? null;
+
+        resendDeadline =
+            toDeadline(data.resendAfterSeconds);
+
+        expiryDeadline =
+            toDeadline(data.codeExpiresAfterSeconds);
+
+        windowDeadline =
+            toDeadline(data.windowResetAfterSeconds);
+
+        switch (data.status) {
+
+            case "CODE_SENT":
+                showMessage("验证码已发送，请检查邮箱。");
+                code.value = "";
+                break;
+
+            case "INVALID_CODE":
+                showMessage(
+                    "验证码错误，还剩 "
+                    + remainingAttempts
+                    + " 次验证机会。",
+                    true
+                );
+                break;
+
+            case "RESEND_COOLDOWN":
+                showMessage(
+                    "发送过于频繁，请等待倒计时结束。",
+                    true
+                );
+                break;
+
+            case "SEND_LIMIT_REACHED":
+                showMessage(
+                    "当前周期的发送次数已用完。"
+                    + "仍可验证尚未过期的验证码。",
+                    true
+                );
+                break;
+
+            case "ATTEMPT_LIMIT_REACHED":
+                showMessage(
+                    "验证机会已用完。"
+                    + "请等待限制周期结束后重新申请。",
+                    true
+                );
+                break;
+
+            case "CODE_EXPIRED":
+                showMessage(
+                    "验证码已过期，请重新申请。",
+                    true
+                );
+                break;
+
+            case "INVALID_OR_UNAVAILABLE":
+                showMessage(
+                    "如果该邮箱需要验证，"
+                    + "系统将按照安全规则处理请求。"
+                );
+                break;
+
+            case "VERIFIED":
+
+                sessionStorage.removeItem(
+                    "verificationEmail"
+                );
+
+                location.assign(
+                    "/login.html?verified=1"
+                );
+
+                return;
+        }
+
+        renderState();
+    }
+
+    // ==================== Render State ====================
+
+    function renderState() {
+
+        const resendSeconds =
+            secondsLeft(resendDeadline);
+
+        const expirySeconds =
+            secondsLeft(expiryDeadline);
+
+        const windowSeconds =
+            secondsLeft(windowDeadline);
+
+        const windowEnded =
+            windowSeconds === 0;
+
+        // Once the window ends, request a new code
+        // instead of assuming the previous code is usable.
+        if (windowEnded) {
+            remainingSends = null;
+            remainingAttempts = null;
+        }
+
+        // ==================== Counters ====================
+
+        $("sendAttempts").textContent =
+            (remainingSends ?? "—") + " / 5";
+
+        $("verifyAttempts").textContent =
+            (remainingAttempts ?? "—") + " / 5";
+
+        $("sendBar").style.width =
+            ((remainingSends ?? 0) / 5 * 100) + "%";
+
+        $("verifyBar").style.width =
+            ((remainingAttempts ?? 0) / 5 * 100) + "%";
+
+        $("verifyAttempts").classList.toggle(
+            "warning",
+            remainingAttempts !== null
+            && remainingAttempts <= 1
+        );
+
+        // ==================== Button States ====================
+
+        const sendLimitReached =
+            !windowEnded
+            && (
+                remainingSends === 0
+                || remainingAttempts === 0
+            );
+
+        sendButton.disabled =
+            !csrf
+            || busy
+            || sendLimitReached
+            || (resendSeconds ?? 0) > 0;
+
+        if (sendLimitReached) {
+
+            sendButton.textContent =
+                "限制将在 "
+                + formatTime(windowSeconds ?? 0)
+                + " 后解除";
+
+        } else if ((resendSeconds ?? 0) > 0) {
+
+            sendButton.textContent =
+                formatTime(resendSeconds)
+                + " 后重新发送";
+
+        } else {
+
+            sendButton.textContent =
+                "发送 / 重新发送验证码";
+        }
+
+        verifyButton.disabled =
+            !csrf
+            || busy
+            || remainingAttempts === 0
+            || expirySeconds === 0
+            || windowEnded;
+
+        // ==================== Time Information ====================
+
+        $("expiryText").textContent =
+            expirySeconds === null
+                ? ""
+                : "验证码剩余有效时间："
+                + formatTime(expirySeconds);
+
+        $("windowText").textContent =
+            windowSeconds === null
+                ? ""
+                : windowEnded
+                    ? "限制周期已结束，请重新申请验证码。"
+                    : "次数限制将在 "
+                    + formatTime(windowSeconds)
+                    + " 后重置";
+    }
+
+    // ==================== Send Code ====================
+
+    async function sendCode() {
+
+        if (busy || !csrf || !email.reportValidity()) {
+            return;
+        }
+
+        busy = true;
+        renderState();
+
+        showMessage("正在请求发送验证码...");
+
+        try {
+
+            const data = await postJSON(
+                "/api/auth/email/send-code",
+                {}
+            );
+
+            applyResponse(data);
+
+            // Public requests do not expose account-specific limits.
+            if (data.status === "INVALID_OR_UNAVAILABLE") {
+                resendDeadline = Date.now() + 60_000;
+            }
+
+        } catch (error) {
+
+            showMessage(error.message, true);
+
+        } finally {
+
+            busy = false;
+            renderState();
+        }
+    }
+
+    sendButton.addEventListener("click", sendCode);
+
+    // ==================== Verify Code ====================
+
+    $("verifyForm").addEventListener(
+        "submit",
+        async event => {
+
+            event.preventDefault();
+
+            if (busy || !csrf || !email.reportValidity()) {
+                return;
+            }
+
+            busy = true;
+            renderState();
+
+            try {
+
+                const data = await postJSON(
+                    "/api/auth/email/verify",
+                    {
+                        code: code.value
+                    }
+                );
+
+                applyResponse(data);
+
+            } catch (error) {
+
+                showMessage(error.message, true);
+
+            } finally {
+
+                busy = false;
+                renderState();
+            }
+        }
+    );
+
+    // Reset the display when using a different email.
+    email.addEventListener("input", () => {
+
+        remainingSends = null;
+        remainingAttempts = null;
+
+        resendDeadline = null;
+        expiryDeadline = null;
+        windowDeadline = null;
+
+        code.value = "";
+
+        showMessage("");
+        renderState();
+    });
+
+
+    // ==================== Initialization ====================
+
+    async function initialize() {
+
+        try {
+
+            // ==================== Check Verification Session ====================
+
+            const sessionResponse = await fetch(
+                "/api/auth/email/session",
+                {
+                    credentials: "same-origin",
+                    cache: "no-store"
+                }
+            );
+
+            if (sessionResponse.status === 403
+                || sessionResponse.status === 401) {
+
+                location.replace("/login.html");
+
+                return;
+            }
+
+            if (!sessionResponse.ok) {
+                throw new Error("无法获取邮箱验证信息");
+            }
+
+            const sessionData =
+                await sessionResponse.json();
+
+            // Use the email bound to the server session.
+            email.value = sessionData.email;
+            email.readOnly = true;
+
+            // ==================== Load CSRF Token ====================
+
+            const csrfResponse = await fetch(
+                "/api/auth/csrf",
+                {
+                    credentials: "same-origin",
+                    cache: "no-store"
+                }
+            );
+
+            if (!csrfResponse.ok) {
+                throw new Error("无法获取安全令牌");
+            }
+
+            csrf = await csrfResponse.json();
+
+            renderState();
+
+            showMessage(
+                "请发送验证码并完成邮箱验证。"
+            );
+
+        } catch (error) {
+
+            showMessage(error.message, true);
+        }
+    }
+
+
+    // Use absolute timestamps to avoid countdown drift.
+    setInterval(renderState, 250);
+
+    initialize();
+
+</script>
+
+</body>
+</html>

@@ -23,7 +23,10 @@ class UserAccountServiceChangePasswordTest {
         when(repository.findByUsername("testuser1"))
                 .thenReturn(Optional.of(user));
 
-        new UserAccountService(repository)
+        new UserAccountService(
+                repository,
+                mock(AccountCleanupService.class)
+        )
                 .changePassword("testuser1", "OldPassword123", "NewPassword456");
 
         assertTrue(encoder.matches("NewPassword456", user.getPasswordHash()));
@@ -42,7 +45,10 @@ class UserAccountServiceChangePasswordTest {
                 .thenReturn(Optional.of(user));
 
         assertThrows(IllegalArgumentException.class, () ->
-                new UserAccountService(repository)
+                new UserAccountService(
+                        repository,
+                        mock(AccountCleanupService.class)
+                )
                         .changePassword("testuser1", "WrongPassword", "NewPassword456")
         );
         assertEquals(oldHash, user.getPasswordHash());
@@ -58,7 +64,10 @@ class UserAccountServiceChangePasswordTest {
                 .thenReturn(Optional.of(user));
 
         assertThrows(IllegalArgumentException.class, () ->
-                new UserAccountService(repository)
+                new UserAccountService(
+                        repository,
+                        mock(AccountCleanupService.class)
+                )
                         .changePassword("testuser1", "OldPassword123", "OldPassword123")
         );
         assertEquals(hash, user.getPasswordHash());
@@ -75,7 +84,10 @@ class UserAccountServiceChangePasswordTest {
                 .thenReturn(Optional.of(user));
 
         assertThrows(IllegalArgumentException.class, () ->
-                new UserAccountService(repository)
+                new UserAccountService(
+                        repository,
+                        mock(AccountCleanupService.class)
+                )
                         .changePassword("testuser1", "OldPassword123", "密码".repeat(25))
         );
         verify(repository, never()).save(any(UserEntity.class));
