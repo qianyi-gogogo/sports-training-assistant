@@ -12,13 +12,16 @@
         p { line-height: 1.6; }
         label { display: block; margin: 16px 0 7px; font-weight: 600; }
         input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
-        small { display: block; margin-top: 6px; color: #64748b; }
+        small { display: block; margin-top: 6px; color: #64748b; line-height: 1.6; }
         button { width: 100%; margin-top: 22px; padding: 12px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; font: inherit; cursor: pointer; }
         button:disabled { opacity: .55; cursor: wait; }
         a { color: #2563eb; text-decoration: none; }
         .foot { margin-top: 18px; text-align: center; }
         .error { color: #b42318; }
         .message { min-height: 20px; }
+        .email-notice { padding: 12px; margin-top: 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; line-height: 1.6; }
+        .email-ack { display: flex; align-items: flex-start; gap: 9px; margin-top: 10px; font-size: 14px; font-weight: normal; cursor: pointer; }
+        .email-ack input { width: 17px; height: 17px; margin: 2px 0 0; flex: 0 0 17px; }
     </style>
 </head>
 <body>
@@ -31,6 +34,13 @@
             <small>3–32 位英文字母、数字或下划线</small>
             <label for="email">电子邮箱</label>
             <input id="email" type="email" autocomplete="email" maxlength="254" required>
+            <div class="email-notice">
+                <strong>重要提醒：</strong>目前不支持更换注册邮箱，忘记密码时只能通过已验证的注册邮箱重置。若无法访问该邮箱，暂不提供人工找回服务。请填写你能够长期访问的邮箱，并确认地址正确。
+            </div>
+            <label class="email-ack" for="emailAcknowledged">
+                <input id="emailAcknowledged" type="checkbox" required>
+                <span>我已了解邮箱不可更换，并确认自己能够访问此邮箱。</span>
+            </label>
             <small>
                 注册后需要完成邮箱验证才能登录。
                 验证码最长有效期为10分钟，
@@ -51,6 +61,9 @@
         const form = document.getElementById("registerForm");
         const message = document.getElementById("message");
         const button = document.getElementById("registerButton");
+        document.getElementById("email").addEventListener("input", () => {
+            document.getElementById("emailAcknowledged").checked = false;
+        });
         form.addEventListener("submit", async event => {
             event.preventDefault();
             if (!form.reportValidity()) return;
@@ -63,16 +76,10 @@
             message.textContent = "";
             try {
                 const csrfResponse = await fetch("/api/auth/csrf", {
-                    credentials: "same-origin",
-                    cache: "no-store"
+                    credentials: "same-origin", cache: "no-store"
                 });
-
-                if (!csrfResponse.ok) {
-                    throw new Error("无法获取安全令牌");
-                }
-
+                if (!csrfResponse.ok) throw new Error("无法获取安全令牌");
                 const csrf = await csrfResponse.json();
-
                 const response = await fetch("/api/auth/register", {
                     method: "POST",
                     credentials: "same-origin",
@@ -88,7 +95,6 @@
                 });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(data.error || "注册失败（HTTP " + response.status + "）");
-
                 location.assign("/verify-email.html");
             } catch (error) {
                 message.textContent = error.message;
